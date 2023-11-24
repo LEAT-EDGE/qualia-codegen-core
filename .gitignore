@@ -1,0 +1,14 @@
+output/
+__pycache__/
+.ipynb_checkpoints/
+.idea/
+/lightning_logs/
+SpeechCommands/
+network_test/
+in2fix.py
+*.csv
+out/
+*.txt
+*.tar.gz
+pylog/
+*.egg-info/

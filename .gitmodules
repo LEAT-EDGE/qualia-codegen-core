@@ -1,0 +1,6 @@
+[submodule "examples/SparkFunEdge/third_party/SparkFun_Apollo3_AmbiqSuite_BSPs"]
+	path = src/qualia_codegen_core/examples/SparkFunEdge/third_party/SparkFun_Apollo3_AmbiqSuite_BSPs
+	url = https://github.com/sparkfun/SparkFun_Apollo3_AmbiqSuite_BSPs.git
+[submodule "third_party/cmsis"]
+	path = src/qualia_codegen_core/examples/third_party/cmsis
+	url = https://github.com/piernov/CMSIS_5.git

@@ -1,0 +1,86 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "qualia-codegen-core"
+authors = [
+    {name = "Pierre-Emmanuel Novac", email = "penovac@unice.fr"},
+]
+description = "Generate portable C inference code from Keras or PyTorch model"
+readme = "README.md"
+requires-python = ">=3.9,<3.12"
+license.text = "AGPL-3.0-or-later"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'numpy',
+    'jinja2',
+    'typing_extensions',
+]
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://naixtech.unice.fr/gitlab/qualia/qualia-codegen-core"
+
+[project.optional-dependencies]
+tensorflow = ['tensorflow>=2.6.0', 'keras>=2.6.0']
+pytorch = ['torch>=1.8.0', 'tabulate']
+graph = ['graphviz']
+tests = ['pytest', 'pytest-xdist']
+lint = ['ruff']
+typecheck = ['mypy', 'pyright']
+docs = ['sphinx', 'sphinx-rtd-theme', 'myst-parser']
+
+[project.scripts]
+qualia-codegen = "qualia_codegen_core.main:main"
+
+[tool.pdm]
+
+[tool.pdm.version]
+source = "scm"
+
+[tool.ruff]
+extend-exclude = ["third_party"]
+select = ["ALL"]
+#select = ["E", "F", "B"]
+ignore = [
+  "ANN101", # Ignore missing type annotation for self in methods
+  "ANN102", # Ignore missing type annotation for self in class methods
+  "D1", # Ignore missing pydoc
+  "N999", # Our module have the same name as the contained class in PascalCase
+  "D203", # Prefer D211
+  "D213" # D212 is ruff's preference
+]
+line-length = 131
+target-version = "py39"
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "single"
+
+[tool.mypy]
+files = ["src"]
+exclude = ["third_party", "examples"]
+python_version = 3.9
+strict = true
+show_column_numbers = true
+pretty = true
+plugins = "numpy.typing.mypy_plugin"
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/third_party", "**/examples"]
+pythonVersion = "3.9"
+typeCheckingMode = "strict"
+reportCallInDefaultInitializer = "warning"
+reportImplicitOverride = "warning"
+reportImplicitStringConcatenation = "warning"
+reportMissingSuperCall = "warning"
+reportPropertyTypeMismatch = "warning"
+reportShadowedImports = "warning"
+reportUninitializedInstanceVariable = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnusedCallResult = "warning"

@@ -1,0 +1,50 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+default:
+  image: archlinux:latest
+  before_script:
+    - pacman -Syu --noconfirm --needed python-pytorch python-tensorflow python-pip python-numpy python-jinja
+    - pacman -S --noconfirm --needed python-pytest python-pytest-dependency python-pytest-xdist python-pytest-env
+    - pacman -S --noconfirm --needed python-ruff mypy git
+
+stages:          # List of stages for jobs, and their order of execution
+  - check
+  - deploy
+  - doc
+
+check-job:
+  stage: check
+  script:
+    - pip install --break-system-packages -e .[tests,pytorch,tensorflow,lint,typecheck]
+    - ruff check src || ((exit_code|=$?))
+    - mypy || ((exit_code|=$?))
+    - $(exit $exit_code)
+
+deploy-job:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  before_script:
+    - pacman -Syu --noconfirm --needed python-build python-pkginfo python-py python-lazy python-pyproject-hooks python-packaging
+    - pacman -S --noconfirm --needed python-setuptools python-pyparsing python-pluggy python-platformdirs python-requests
+    - pacman -S --noconfirm --needed python-pip git
+    - pip install --break-system-packages devpi-client git+http://naixtech.unice.fr/gitlab/penovac/devpi-client-password-stdin.git
+  script:
+    - devpi use http://naixtech.unice.fr/devpi
+    - devpi login gitlab < ${GITLAB_LDAP_PASSWORD}
+    - devpi use penovac/qualia-nightly
+    - devpi upload
+
+doc-job:
+  stage: doc
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  before_script:
+    - pacman -Syu --noconfirm --needed rclone make git
+    - pacman -S --noconfirm --needed python-sphinx python-sphinx-autodoc-typehints python-sphinx_rtd_theme python-myst-parser
+    - pacman -S --noconfirm --needed python-pdm python-numpy python-keras python-pytorch
+  script:
+    - make -C docs html
+    - read RCLONE_SFTP_PASS < <(rclone obscure - < ${GITLAB_LDAP_PASSWORD}) && export RCLONE_SFTP_PASS
+    - rclone sync --sftp-host naixtech.unice.fr --sftp-user gitlab docs/_build/html :sftp:/gitlab/public_html/docs/qualia-codegen-core
