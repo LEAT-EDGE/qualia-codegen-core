@@ -33,7 +33,7 @@ graph = ['graphviz']
 tests = ['pytest', 'pytest-xdist']
 lint = ['ruff']
 typecheck = ['mypy', 'pyright']
-docs = ['sphinx', 'sphinx-rtd-theme', 'myst-parser']
+docs = ['pdm', 'sphinx', 'sphinx-rtd-theme', 'myst-parser']
 
 [project.scripts]
 qualia-codegen = "qualia_codegen_core.main:main"
