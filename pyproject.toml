@@ -24,7 +24,8 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-homepage = "https://naixtech.unice.fr/gitlab/qualia/qualia-codegen-core"
+homepage = "https://github.com/LEAT-EDGE/qualia-codegen-core"
+documentation = "https://leat-edge.github.io/qualia-codegen-core"
 
 [project.optional-dependencies]
 tensorflow = ['tensorflow>=2.6.0', 'keras>=2.6.0']
