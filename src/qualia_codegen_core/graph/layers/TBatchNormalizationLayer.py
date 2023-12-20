@@ -2,16 +2,17 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import numpy as np
+
+from qualia_codegen_core.typing import TYPE_CHECKING, NDArrayFloatOrInt
 
 from .TBaseLayer import TBaseLayer
 
 if TYPE_CHECKING:
-    from qualia_codegen_core.typing import NDArrayFloatOrInt
+    from collections import OrderedDict  # noqa: TCH003
 
-    from .TActivationLayer import TActivation
+    from .TActivationLayer import TActivation  # noqa: TCH001
 
 if sys.version_info >= (3, 12):
     from typing import override
@@ -54,5 +55,8 @@ class TBatchNormalizationLayer(TBaseLayer):
 
     @property
     @override
-    def weights(self) -> dict[str, NDArrayFloatOrInt]:
-        return {'kernel': self.kernel, 'bias': self.bias}
+    def weights(self) -> OrderedDict[str, NDArrayFloatOrInt]:
+        w = super().weights
+        w['kernel'] = self.kernel
+        w['bias'] = self.bias
+        return w

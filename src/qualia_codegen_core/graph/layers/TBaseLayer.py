@@ -1,5 +1,6 @@
 import sys
 from abc import ABC
+from collections import OrderedDict
 from dataclasses import dataclass
 
 from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shapes
@@ -21,6 +22,6 @@ class TBaseLayer(ABC):
         raise NotImplementedError
 
     @property
-    def weights(self) -> dict[str, NDArrayFloatOrInt]:
+    def weights(self) -> OrderedDict[str, NDArrayFloatOrInt]:
         # If adding any weights in a child layer, fill dict with same name as attribute
-        return {}
+        return OrderedDict()
