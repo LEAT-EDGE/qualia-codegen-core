@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 import numpy as np
-import numpy.typing
 
-from qualia_codegen_core.typing import NDArrayFloatOrInt
+from qualia_codegen_core.typing import TYPE_CHECKING, NDArrayFloatOrInt
 
 if TYPE_CHECKING:
-    from .graph.LayerNode import LayerNode
+    from .graph.LayerNode import LayerNode  # noqa: TCH001
 
 logger = logging.getLogger(__name__)
 
