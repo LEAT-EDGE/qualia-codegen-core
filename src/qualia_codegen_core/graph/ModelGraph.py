@@ -20,7 +20,7 @@ if TYPE_CHECKING:
         from typing_extensions import TypeGuard
 
     from torch import nn # noqa: I001 # torch must be imported before keras to avoid deadlock
-    import keras.Model # type: ignore[import] # No stubs for keras package
+    import keras.Model # type: ignore[import-untyped] # No stubs for keras package
 
 if sys.version_info >= (3, 12):
     from typing import override
@@ -154,7 +154,7 @@ class ModelGraph:
 
     def graphviz(self) -> str | None:
         try:
-            from graphviz import Digraph  # type: ignore[import] # Graphviz is missing py.typed xflr6/graphviz#180
+            from graphviz import Digraph  # type: ignore[import-untyped] # Graphviz is missing py.typed xflr6/graphviz#180
         except ImportError:
             logger.warning('Graphviz not available')
             return None

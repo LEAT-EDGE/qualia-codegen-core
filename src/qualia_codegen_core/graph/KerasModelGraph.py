@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Callable, Final, Literal
 
-from keras.activations import linear, relu, softmax  # type: ignore[import] # No stubs for keras package
-from keras.layers import (  # type: ignore[import] # No stubs for keras package
+from keras.activations import linear, relu, softmax  # type: ignore[import-untyped] # No stubs for keras package
+from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras package
     Activation,
     Add,
     AveragePooling1D,
@@ -48,15 +48,15 @@ from .ModelGraph import ModelGraph
 
 try:
     # Keras >= 2.13.1
-    from keras.src.engine.input_layer import InputLayer  # type: ignore[import] # No stubs for keras package
+    from keras.src.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
 except ImportError:
     # Keras < 2.13.0
-    from keras.engine.input_layer import InputLayer  # type: ignore[import] # No stubs for keras package
+    from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
 
 if TYPE_CHECKING:
     import numpy.typing
-    import tensorflow as tf  # type: ignore[import]
-    from keras import Model  # type: ignore[import]
+    import tensorflow as tf  # type: ignore[import-untyped]
+    from keras import Model  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
 
