@@ -27,6 +27,7 @@ extern "C" {
 #define scale(type, number, scale_factor, round_mode) _scale(type, number, scale_factor, round_mode)
 
 typedef enum {
+  ROUND_MODE_NONE,
   ROUND_MODE_FLOOR,
   ROUND_MODE_NEAREST,
 } round_mode_t;
