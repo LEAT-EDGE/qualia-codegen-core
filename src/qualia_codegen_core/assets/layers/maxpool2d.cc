@@ -29,6 +29,7 @@
 // For fixed point quantization
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
+#define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
 #define NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.width) }}
 #define LONG_NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.long_width) }}
 
@@ -59,7 +60,7 @@ static inline void {{ node.layer.name }}(
           }
           x = 0;
         }
-        max = scale(NUMBER_T, max, INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR);
+        max = scale(NUMBER_T, max, INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
         output[pos_y][pos_x][k] = clamp_to(NUMBER_T, max);
       }
     }

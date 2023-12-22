@@ -27,6 +27,7 @@
 // For fixed point quantization
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
+#define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
 #define NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.width) }}
 #define LONG_NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.long_width) }}
 
@@ -72,7 +73,7 @@ static inline void {{ node.layer.name }}(
     o[x] = __SSAT(output_acc << (INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
 #endif
 #else
-    output_acc[k] = scale(NUMBER_T, output_acc[k], INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR);
+    output_acc[k] = scale(NUMBER_T, output_acc[k], INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     output[k] = clamp_to(NUMBER_T, output_acc[k]);
 #endif
   }

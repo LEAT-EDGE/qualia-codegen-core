@@ -21,6 +21,7 @@
 // For fixed point quantization
 #define ACC_SCALE_FACTOR {{ node.innodes | map(attribute="q") | max(attribute="output_scale_factor") | attr("output_scale_factor") }} // Get maximum scale factor of previous layers
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
+#define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
 #define NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.width) }}
 #define LONG_NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.long_width) }}
 
@@ -42,10 +43,10 @@ static inline void {{ node.layer.name }}(
   for (x = 0; x < {{ node.output_shape[0][1:] | join('*') }}; x++) {
     // scale all fixed point inputs to same factor and add them, negative factor is left shift
     output_acc = {% for s in node.innodes %}
-                    + scale(NUMBER_T, (LONG_NUMBER_T)i_{{ loop.index }}[x], {{ s.q.output_scale_factor }} - ACC_SCALE_FACTOR)
+                    + scale(NUMBER_T, (LONG_NUMBER_T)i_{{ loop.index }}[x], {{ s.q.output_scale_factor }} - ACC_SCALE_FACTOR, OUTPUT_ROUND_MODE)
                  {% endfor %};
 #ifdef ACTIVATION_LINEAR
-    output_acc = scale(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR);
+    output_acc = scale(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     o[x] = clamp_to(NUMBER_T, output_acc);
 #elif defined(ACTIVATION_RELU)
     if (output_acc < 0) {
@@ -59,7 +60,7 @@ static inline void {{ node.layer.name }}(
       o[x] = __SSAT(output_acc << (ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
 #endif
 #else
-      output_acc = scale(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR);
+      output_acc = scale(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       o[x] = clamp_to(NUMBER_T, output_acc);
 #endif
     }

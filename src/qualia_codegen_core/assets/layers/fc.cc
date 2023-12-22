@@ -26,6 +26,7 @@
 #define WEIGHTS_SCALE_FACTOR {{ node.q.weights_scale_factor }}
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
+#define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
 #define NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.width) }}
 #define LONG_NUMBER_T {{ qtype2ctype(node.q.number_type, node.q.long_width) }}
 
@@ -44,24 +45,25 @@ static inline void {{ node.layer.name }}(
 
   for (k = 0; k < FC_UNITS; k++) { 
 {% if node.layer.use_bias %}
-    output_acc = scale(NUMBER_T, (LONG_NUMBER_T)bias[k], -INPUT_SCALE_FACTOR);
+    output_acc = scale(NUMBER_T, (LONG_NUMBER_T)bias[k], -INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 {% else %}
-    output_acc = 0; 
+    output_acc = 0;
 {% endif %}
+       //output_acc += 8;
     for (z = 0; z < INPUT_SAMPLES; z++) 
       output_acc = output_acc + ((LONG_NUMBER_T)kernel[k][z] * (LONG_NUMBER_T)input[z]);
 
     // Activation function
 #ifdef ACTIVATION_LINEAR
     // Linear (MEANS NONE)
-    output_acc = scale(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR);
+    output_acc = scale(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     output[k] = clamp_to(NUMBER_T, output_acc);
 #elif defined(ACTIVATION_RELU)
     // ReLU
     if (output_acc < 0) {
       output[k] = 0;
     } else {
-      output_acc = scale(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR);
+      output_acc = scale(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       output[k] = clamp_to(NUMBER_T, output_acc);
     }
 #endif

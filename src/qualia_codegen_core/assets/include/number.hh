@@ -23,8 +23,13 @@ extern "C" {
 
 #define _clamp_to(type, number) clamp_to_number_t_ ## type (number)
 #define clamp_to(type, number) _clamp_to(type, number)
-#define _scale(type, number, scale_factor) scale_number_t_ ## type (number, scale_factor)
-#define scale(type, number, scale_factor) _scale(type, number, scale_factor)
+#define _scale(type, number, scale_factor, round_mode) scale_number_t_ ## type (number, scale_factor, round_mode)
+#define scale(type, number, scale_factor, round_mode) _scale(type, number, scale_factor, round_mode)
+
+typedef enum {
+  ROUND_MODE_FLOOR,
+  ROUND_MODE_NEAREST,
+} round_mode_t;
 
 // Idea 1: Write the smallest min max interval of the net, could be an issue for hybrid int type network
 // Idea 2: listing any interval and add type in name in a switch case like <- better but painfull
@@ -57,7 +62,7 @@ static inline {{ qtype2ctype(number_type.number_type, number_type.long_width) }}
 
 {% if number_type.number_type.__name__ == 'float' -%}
 static inline {{ qtype2ctype(number_type.number_type, number_type.long_width) }} scale_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(
-  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor) {
+  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor, round_mode_t round_mode) {
 	return number;
 }
 static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} clamp_to_number_t_{{qtype2ctype(number_type.number_type, number_type.width)}}(
@@ -66,11 +71,16 @@ static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} clam
 }
 {% else -%}
 static inline {{ qtype2ctype(number_type.number_type, number_type.long_width) }} scale_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(
-  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor) {
-  if (scale_factor < 0)
+  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor, round_mode_t round_mode) {
+  if (scale_factor <= 0) {
+    // No rounding to apply when shifting left
     return number << - scale_factor;
-  else 
+  } else {
+    if (round_mode == ROUND_MODE_NEAREST) {
+      number += (1 << (scale_factor - 1)); // +0.5 in fixed-point
+    }
     return number >> scale_factor;
+  }
 }
 static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} clamp_to_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(
   {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number) {
