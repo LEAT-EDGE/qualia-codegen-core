@@ -31,6 +31,7 @@ extern "C" {
 #define MODEL_OUTPUT_SAMPLES {{ nodes[-1].output_shape[0][-1] }}
 
 #define MODEL_INPUT_SCALE_FACTOR {{ nodes[0].q.output_scale_factor }} // scale factor of InputLayer
+#define MODEL_INPUT_ROUND_MODE ROUND_MODE_{{ nodes[0].q.output_round_mode | upper }}
 #define MODEL_INPUT_NUMBER_T {{ qtype2ctype(nodes[0].q.number_type, nodes[0].q.width) }}
 #define MODEL_INPUT_LONG_NUMBER_T {{ qtype2ctype(nodes[0].q.number_type, nodes[0].q.long_width) }}
 

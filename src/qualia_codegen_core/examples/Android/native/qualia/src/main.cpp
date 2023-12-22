@@ -29,6 +29,16 @@ std::vector<std::array<float, N>> readInputsFromFile(const char *filename) {
 	return inputs;
 }
 
+static inline float round_with_mode(float v, round_mode_t round_mode) {
+	if (round_mode == ROUND_MODE_FLOOR) {
+		return floorf(v);
+	} else if (round_mode == ROUND_MODE_NEAREST) {
+		return floorf(v + 0.5f);
+	} else {
+		return v;
+	}
+}
+
 template<size_t InputDims>
 void convert_input_vector(const std::array<float, InputDims> &input, input_t out) {
 	static_assert(InputDims == sizeof(input_t) / sizeof(MODEL_INPUT_NUMBER_T));
@@ -37,7 +47,7 @@ void convert_input_vector(const std::array<float, InputDims> &input, input_t out
 	for (size_t i = 0; i < InputDims; i++) {
 		// Fixed-point conversion if model input is integer
 		if constexpr(std::is_integral_v<MODEL_INPUT_NUMBER_T>) {
-			out_flat[i] = clamp_to(MODEL_INPUT_NUMBER_T, (MODEL_INPUT_LONG_NUMBER_T)floor(input.at(i) * (1<<MODEL_INPUT_SCALE_FACTOR)));
+			out_flat[i] = clamp_to(MODEL_INPUT_NUMBER_T, (MODEL_INPUT_LONG_NUMBER_T)round_with_mode(input.at(i) * (1<<MODEL_INPUT_SCALE_FACTOR), MODEL_INPUT_ROUND_MODE));
 		} else {
 			out_flat[i] = input.at(i);
 		}
