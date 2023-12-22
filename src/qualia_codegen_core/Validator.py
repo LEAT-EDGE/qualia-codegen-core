@@ -5,7 +5,9 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+
+from qualia_codegen_core.graph.RoundMode import RoundMode
+from qualia_codegen_core.typing import TYPE_CHECKING
 
 from .graph.layers import TActivationLayer, TBaseLayer, TBatchNormalizationLayer, TFlattenLayer, TSumLayer
 from .graph.layers.TActivationLayer import TActivation
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
         from typing import TypeGuard
     else:
         from typing_extensions import TypeGuard
-    from qualia_codegen_core.graph.LayerNode import LayerNode
+    from qualia_codegen_core.graph.LayerNode import LayerNode  # noqa: TCH001
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +102,20 @@ class Validator:
                 return False
         return True
 
+    def validate_round_mode(self, node: LayerNode) -> bool:
+        """Check if layer activation round mode is not None when number_type is int.
+
+        :param node: LayerNode to check the activation round mode of
+        :return: ``True`` if layer's round mode is neither None nor :attr:`qualia_codegen_core.graph.RoundMode.RoundMode.NONE` when
+                 layer's number_type is int, otherwise ``False``
+        """
+        if isinstance(node.q.number_type, int) and (
+                node.q.output_round_mode is None or node.q.output_round_mode == RoundMode.NONE):
+            logger.error('Round mode must not be None when number type is int for layer %s', node.layer.name)
+            return False
+        return True
+
+
     def validate_node(self, node: LayerNode) -> bool:
         valid = True
 
@@ -107,4 +123,5 @@ class Validator:
         valid = valid and self.validate_combined_activation(node.layer)
         valid = valid and self.validate_batchnorm(node)
         valid = valid and self.validate_flatten(node)
-        return valid and self.validate_global_sum_pooling(node)
+        valid = valid and self.validate_global_sum_pooling(node)
+        return valid and self.validate_round_mode(node)
