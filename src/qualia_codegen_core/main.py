@@ -7,20 +7,16 @@ from __future__ import annotations
 import copy
 import logging
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 from qualia_codegen_core import Converter
 from qualia_codegen_core.graph import ModelGraph, Quantization
+from qualia_codegen_core.graph.ActivationsRange import ActivationsRange
+from qualia_codegen_core.graph.RoundMode import RoundMode
+from qualia_codegen_core.typing import TYPE_CHECKING
 
-
-@dataclass
-class ActivationRange:
-    input_max: float | None
-    output_max: float | None
-    input_q: int | None
-    activation_q: int | None
-    weights_q: int | None
+if TYPE_CHECKING:
+    from qualia_codegen_core.graph.ActivationRange import ActivationRange  # noqa: TCH001
 
 logger = logging.getLogger(__name__)
 
@@ -66,17 +62,6 @@ def load_modelgraph(filepath: Path, module_name: str = '', *strargs: str) -> Mod
     logger.error('Weights file is not HDF5 and no PyTorch module name specified')
     return None
 
-def load_activations_range(path: Path) -> dict[str, ActivationRange]:
-    activations_range: dict[str, ActivationRange] = {}
-    first_q = None
-    with path.open() as f:
-        for line in f:
-            r = line.split(',')
-            activations_range[r[0]] = ActivationRange(float(r[1]), float(r[2]), int(r[3]), int(r[4]), int(r[5]))
-            if first_q is None:
-                first_q = int(r[3])
-
-    return activations_range
 
 def annotate_quantization(
         modelgraph: ModelGraph,
@@ -99,6 +84,8 @@ def annotate_quantization(
                         long_width=long_width,
                         weights_scale_factor=activations_range[node.layer.name].weights_q,
                         output_scale_factor=activations_range[node.layer.name].activation_q,
+                        weights_round_mode=activations_range[node.layer.name].weights_round_mode,
+                        output_round_mode=activations_range[node.layer.name].activation_round_mode,
                         )
             elif not node.innodes:
                 logger.warning('No quantization information for %s, looking for a subsequent layer with information',
@@ -116,6 +103,8 @@ def annotate_quantization(
                             long_width=long_width,
                             weights_scale_factor=activations_range[nextnode.layer.name].weights_q,
                             output_scale_factor=activations_range[nextnode.layer.name].activation_q,
+                            weights_round_mode=activations_range[nextnode.layer.name].weights_round_mode,
+                            output_round_mode=activations_range[nextnode.layer.name].activation_round_mode,
                             )
                 else:
                     logger.error('No quantization information for %s, and no previous layer to copy from', node.layer.name)
@@ -133,6 +122,8 @@ def annotate_quantization(
                     long_width=long_width,
                     weights_scale_factor=0,
                     output_scale_factor=0,
+                    weights_round_mode=RoundMode.NONE,
+                    output_round_mode=RoundMode.NONE,
                     )
     return True
 
@@ -166,9 +157,9 @@ def qualia_codegen(filename: str,
     if not modelgraph:
         return None
 
-    activations_range = {}
+    activations_range = ActivationsRange()
     if activations_range_file:
-        activations_range = load_activations_range(Path(activations_range_file))
+        activations_range = activations_range.load(Path(activations_range_file), input_layer_name=modelgraph.nodes[0].layer.name)
 
     if not annotate_quantization(modelgraph, activations_range, number_type, width, long_width):
         return None
