@@ -111,8 +111,8 @@ static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} scal
     return __SSAT(number >> scale_factor, sizeof({{ qtype2ctype(number_type.number_type, number_type.width) }}) * 8);
   }
 #else
-  number = scale_{{ qtype2ctype(number_type.number_type, number_type.width) }}(number, scale_factor, OUTPUT_ROUND_MODE);
-  return clamp_to_{{ qtype2ctype(number_type.number_type, number_type.width) }}(number);
+  number = scale_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(number, scale_factor, round_mode);
+  return clamp_to_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(number);
 #endif
 }
 {%- endif %}
