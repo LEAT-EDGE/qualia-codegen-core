@@ -74,7 +74,7 @@ static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} clam
 	return ({{ qtype2ctype(number_type.number_type, number_type.width) }}) number;
 }
 static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} scale_and_clamp_to_number_t_{{qtype2ctype(number_type.number_type, number_type.width)}}(
-  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number) {
+  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor, round_mode_t round_mode) {
 	return ({{ qtype2ctype(number_type.number_type, number_type.width) }}) number;
 }
 {% else -%}
