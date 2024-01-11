@@ -141,6 +141,9 @@ class Converter:
                                     number_types=self.number_types,
                                     qtype2ctype=self.dataconverter.qtype2ctype)
 
+    def write_defines_header(self, modelgraph: ModelGraph) -> str:
+        return self.render_template('include/defines.hh', self.output_path_header / 'defines.h', nodes=modelgraph.nodes)
+
     def combine_zeropadding(self, modelgraph: ModelGraph) -> ModelGraph | None:
         zeropaddingnodes = [node for node in modelgraph.nodes if isinstance(node.layer, layers.TZeroPaddingLayer)]
         for zeropaddingnode in zeropaddingnodes:
@@ -245,6 +248,9 @@ class Converter:
                       allocation: dict[str, list[list[LayerNode]] | dict[LayerNode, int]]) -> str | None:
         # Used to ignore includes in generated files for combined returned code
         rendered = '#define SINGLE_FILE\n'
+
+        # Write defines.h global defines
+        rendered += self.write_defines_header(modelgraph)
 
         # Write number.h numeric type configuration
         rendered += self.write_numeric_header()
