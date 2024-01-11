@@ -101,15 +101,13 @@ static inline void {{ node.layer.name }}(
     for (pos_y = 0; pos_y < CONV_OUTHEIGHT; pos_y++) { 
       for (pos_x = 0; pos_x < CONV_OUTWIDTH; pos_x++) { 
 #ifdef ACTIVATION_LINEAR
-        output_acc[pos_y][pos_x] = scale(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-        output[pos_y][pos_x][k] = clamp_to(NUMBER_T, output_acc[pos_y][pos_x]);
+        output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
         // Activation function: ReLU
         if (output_acc[pos_y][pos_x] < 0) {
           output[pos_y][pos_x][k] = 0;
         } else {
-          output_acc[pos_y][pos_x] = scale(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-          output[pos_y][pos_x][k] = clamp_to(NUMBER_T, output_acc[pos_y][pos_x]);
+          output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
         }
 #endif
       }

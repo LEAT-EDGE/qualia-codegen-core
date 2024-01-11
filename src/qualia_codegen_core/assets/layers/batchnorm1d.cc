@@ -41,15 +41,13 @@ static inline void {{ node.layer.name }}(
       // Activation function
 #ifdef ACTIVATION_LINEAR
       // Linear (MEANS NONE)
-      tmp = scale(NUMBER_T, tmp, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-      output[x][z] = clamp_to(NUMBER_T, tmp);
+      output[x][z] = scale_and_clamp_to(NUMBER_T, tmp, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
       // ReLU
       if (tmp < 0) {
         output[x][z] = 0;
       } else {
-        tmp = scale(NUMBER_T, tmp, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-        output[x][z] = clamp_to(NUMBER_T, tmp);
+        output[x][z] = scale_and_clamp_to(NUMBER_T, tmp, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       }
 #endif
     }

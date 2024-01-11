@@ -65,17 +65,7 @@ static inline void {{ node.layer.name }}(
   }
 
   for (k = 0; k < INPUT_CHANNELS; k++) {
-#ifdef WITH_CMSIS_NN
-// Not really CMSIS-NN but use SSAT anyway
-#if INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR > 0
-    o[x] = __SSAT(output_acc >> (INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
-#else
-    o[x] = __SSAT(output_acc << (INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
-#endif
-#else
-    output_acc[k] = scale(NUMBER_T, output_acc[k], INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-    output[k] = clamp_to(NUMBER_T, output_acc[k]);
-#endif
+    output[k] = scale_and_clamp_to(NUMBER_T, output_acc[k], INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
   }
 }
 

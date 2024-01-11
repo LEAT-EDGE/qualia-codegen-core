@@ -46,23 +46,12 @@ static inline void {{ node.layer.name }}(
                     + scale(NUMBER_T, (LONG_NUMBER_T)i_{{ loop.index }}[x], {{ s.q.output_scale_factor }} - ACC_SCALE_FACTOR, OUTPUT_ROUND_MODE)
                  {% endfor %};
 #ifdef ACTIVATION_LINEAR
-    output_acc = scale(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-    o[x] = clamp_to(NUMBER_T, output_acc);
+    o[x] = scale_and_clamp_to(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
     if (output_acc < 0) {
       o[x] = 0;
     } else {
-#ifdef WITH_CMSIS_NN
-// Not really CMSIS-NN since using arm_relu_q* is not more efficient, but use SSAT anyway
-#if ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR > 0
-      o[x] = __SSAT(output_acc >> (ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
-#else
-      o[x] = __SSAT(output_acc << (ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
-#endif
-#else
-      output_acc = scale(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-      o[x] = clamp_to(NUMBER_T, output_acc);
-#endif
+      o[x] = scale_and_clamp_to(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     }
 #endif
   }

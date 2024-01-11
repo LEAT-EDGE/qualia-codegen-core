@@ -56,15 +56,13 @@ static inline void {{ node.layer.name }}(
     // Activation function
 #ifdef ACTIVATION_LINEAR
     // Linear (MEANS NONE)
-    output_acc = scale(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-    output[k] = clamp_to(NUMBER_T, output_acc);
+    output[k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
     // ReLU
     if (output_acc < 0) {
       output[k] = 0;
     } else {
-      output_acc = scale(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-      output[k] = clamp_to(NUMBER_T, output_acc);
+      output[k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     }
 #endif
   }

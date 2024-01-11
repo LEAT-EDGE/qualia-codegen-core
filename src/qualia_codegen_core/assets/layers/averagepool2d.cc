@@ -62,8 +62,7 @@ static inline void {{ node.layer.name }}(
 
         avg = tmp / (POOL_SIZE_X * POOL_SIZE_Y);
 
-        avg = scale(NUMBER_T, avg, INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-        output[pos_y][pos_x][k] = clamp_to(NUMBER_T, avg);
+        output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, avg, INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       }
     }
 }

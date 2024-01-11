@@ -60,8 +60,8 @@ static inline void {{ node.layer.name }}(
           }
           x = 0;
         }
-        max = scale(NUMBER_T, max, INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-        output[pos_y][pos_x][k] = clamp_to(NUMBER_T, max);
+
+        output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, max, INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       }
     }
 }

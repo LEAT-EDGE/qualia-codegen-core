@@ -60,17 +60,7 @@ static inline void {{ node.layer.name }}(
     }
 
     for (k = 0; k < INPUT_CHANNELS; k++) {
-#ifdef WITH_CMSIS_NN
-// Not really CMSIS-NN since using arm_relu_q* is not more efficient, but use SSAT anyway
-#if ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR > 0
-      output[pos_x][k] = __SSAT(max[k] >> (INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
-#else
-      output[pos_x][k] = __SSAT(max[k] << (INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR), sizeof(NUMBER_T) * 8);
-#endif
-#else
-      max[k] = scale(NUMBER_T, max[k], INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-      output[pos_x][k] = clamp_to(NUMBER_T, max[k]);
-#endif
+      output[pos_x][k] = scale_and_clamp_to(NUMBER_T, max[k], INPUT_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     }
   }
 }
