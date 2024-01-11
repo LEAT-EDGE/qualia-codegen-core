@@ -183,6 +183,7 @@ CFLAGS+= -mlong-calls #-DNN_CODE_IN_RAM
 CFLAGS+= $(DEFINES)
 CFLAGS+= $(INCLUDES)
 CFLAGS+= -save-temps=obj
+CFLAGS+= -include"$(MODELDIR)/include/defines.h"
 
 CXXFLAGS = $(CFLAGS)
 ## C++ flags
