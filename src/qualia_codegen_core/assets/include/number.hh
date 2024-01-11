@@ -18,13 +18,16 @@ extern "C" {
 #include <stddef.h>
 #include <math.h>
 
-#define True 1
-#define False 0
+#ifdef WITH_CMSIS_NN
+#include "arm_nnfunctions.h"
+#endif
 
 #define _clamp_to(type, number) clamp_to_number_t_ ## type (number)
 #define clamp_to(type, number) _clamp_to(type, number)
 #define _scale(type, number, scale_factor, round_mode) scale_number_t_ ## type (number, scale_factor, round_mode)
 #define scale(type, number, scale_factor, round_mode) _scale(type, number, scale_factor, round_mode)
+#define _scale_and_clamp_to(type, number, scale_factor, round_mode) scale_and_clamp_to_number_t_ ## type (number, scale_factor, round_mode)
+#define scale_and_clamp_to(type, number, scale_factor, round_mode) _scale_and_clamp_to(type, number, scale_factor, round_mode)
 
 typedef enum {
   ROUND_MODE_NONE,
@@ -70,6 +73,10 @@ static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} clam
   {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number) {
 	return ({{ qtype2ctype(number_type.number_type, number_type.width) }}) number;
 }
+static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} scale_and_clamp_to_number_t_{{qtype2ctype(number_type.number_type, number_type.width)}}(
+  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number) {
+	return ({{ qtype2ctype(number_type.number_type, number_type.width) }}) number;
+}
 {% else -%}
 static inline {{ qtype2ctype(number_type.number_type, number_type.long_width) }} scale_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(
   {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor, round_mode_t round_mode) {
@@ -89,6 +96,24 @@ static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} clam
       NUMBER_MIN_{{ qtype2ctype(number_type.number_type, number_type.width) | upper }},
       min_{{ qtype2ctype(number_type.number_type, number_type.width) }}(
         NUMBER_MAX_{{ qtype2ctype(number_type.number_type, number_type.width) | upper }}, number));
+}
+static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} scale_and_clamp_to_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(
+  {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor, round_mode_t round_mode) {
+#ifdef WITH_CMSIS_NN
+  // Not really CMSIS-NN but use SSAT anyway
+  if (scale_factor <= 0) {
+    // No rounding to apply when shifting left
+    return __SSAT(number << - scale_factor, sizeof({{ qtype2ctype(number_type.number_type, number_type.width) }}) * 8);
+  } else {
+    if (round_mode == ROUND_MODE_NEAREST) {
+      number += (1 << (scale_factor - 1)); // +0.5 in fixed-point
+    }
+    return __SSAT(number >> scale_factor, sizeof({{ qtype2ctype(number_type.number_type, number_type.width) }}) * 8);
+  }
+#else
+  number = scale_{{ qtype2ctype(number_type.number_type, number_type.width) }}(number, scale_factor, OUTPUT_ROUND_MODE);
+  return clamp_to_{{ qtype2ctype(number_type.number_type, number_type.width) }}(number);
+#endif
 }
 {%- endif %}
 
