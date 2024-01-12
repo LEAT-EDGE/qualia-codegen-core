@@ -54,9 +54,9 @@ struct NNResult neuralNetworkInfer(float input[]) {
 		if constexpr(std::is_integral_v<MODEL_INPUT_NUMBER_T>) {
 #ifdef WITH_CMSIS_NN
 // Not really CMSIS-NN, use SSAT anyway
-			input_flat[i] = __SSAT((MODEL_INPUT_LONG_NUMBER_T)floor(input[i] * (1<<MODEL_INPUT_SCALE_FACTOR)), sizeof(MODEL_INPUT_NUMBER_T) * 8);
+			input_flat[i] = __SSAT((MODEL_INPUT_LONG_NUMBER_T)round_with_mode(input[i] * (1<<MODEL_INPUT_SCALE_FACTOR), MODEL_INPUT_ROUND_MODE), sizeof(MODEL_INPUT_NUMBER_T) * 8);
 #else
-			input_flat[i] = clamp_to(MODEL_INPUT_NUMBER_T, (MODEL_INPUT_LONG_NUMBER_T)round_with_mode(input[i] * (1<<MODEL_INPUT_SCALE_FACTOR)), MODEL_INPUT_ROUND_MODE);
+			input_flat[i] = clamp_to(MODEL_INPUT_NUMBER_T, (MODEL_INPUT_LONG_NUMBER_T)round_with_mode(input[i] * (1<<MODEL_INPUT_SCALE_FACTOR), MODEL_INPUT_ROUND_MODE));
 #endif
 		} else {
 			input_flat[i] = input[i];
