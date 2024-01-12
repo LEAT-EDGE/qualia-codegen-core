@@ -111,6 +111,7 @@
 									<listOptionValue builtIn="false" value="DOWNLOAD_MODE=DOWNLOAD_MODE_FLASHXIP"/>
 									<listOptionValue builtIn="false" value="DOWNLOAD_MODE_STRING=\&quot;FLASHXIP\&quot;"/>
 								</option>
+								<option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.compiler.std.220615835" name="Language standard" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.compiler.std" useByScannerDiscovery="true" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.compiler.std.gnucpp17" valueType="enumerated"/>
 								<inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler.input.1023034041" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler.input"/>
 							</tool>
 							<tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.2035630574" name="GNU RISC-V Cross C Linker" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker">
@@ -268,6 +269,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/nuclei_sdk/SoC/gd32vf103/Board/gd32vf103c_longan_nano/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/application}&quot;"/>
 								</option>
+								<option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.compiler.std.220615835" name="Language standard" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.compiler.std" useByScannerDiscovery="true" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.compiler.std.gnucpp17" valueType="enumerated"/>
 								<inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler.input.443149860" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler.input"/>
 							</tool>
 							<tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.368174802" name="GNU RISC-V Cross C Linker" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker">
