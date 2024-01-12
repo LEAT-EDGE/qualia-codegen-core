@@ -8,7 +8,7 @@
   */
 
 /* CMSIS-NN round mode definition */
-#ifdef WITH_CMSIS_NN
+#if defined(WITH_CMSIS_NN) || defined(WITH_NMSIS_NN)
 {%- set first_round_mode = nodes[0].q.output_round_mode %}
 {% for output_round_mode in nodes | map(attribute='q') | map(attribute='output_round_mode') -%}
 {% if output_round_mode != first_round_mode %}
@@ -22,9 +22,12 @@
 {%- endfor %}
 {% if first_round_mode == "floor" -%}
 #define ARM_NN_TRUNCATE 1
+#define RISCV_NN_TRUNCATE 1
 {% elif first_round_mode == "nearest" %}
 #undef ARM_NN_TRUNCATE
+#undef RISCV_NN_TRUNCATE
 {% else %}
 #error "Unrecognized round mode, only floor and nearest are supported by CMSIS-NN"
 {% endif %}
-#endif
+#endif // defined(WITH_CMSIS_NN) || defined(WITH_NMSIS_NN)
+
