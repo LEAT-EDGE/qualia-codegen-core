@@ -4,3 +4,6 @@
 [submodule "third_party/cmsis"]
 	path = src/qualia_codegen_core/examples/third_party/cmsis
 	url = https://github.com/piernov/CMSIS_5.git
+[submodule "src/qualia_codegen_core/examples/third_party/nmsis"]
+	path = src/qualia_codegen_core/examples/third_party/nmsis
+	url = https://github.com/Nuclei-Software/NMSIS.git
