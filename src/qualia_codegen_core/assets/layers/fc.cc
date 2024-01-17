@@ -24,6 +24,8 @@
 
 // For fixed point quantization
 #define WEIGHTS_SCALE_FACTOR {{ node.q.weights_scale_factor }}
+#define BIASES_SCALE_FACTOR {{ node.q.bias_scale_factor if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
+#define TMP_SCALE_FACTOR {{ [node.q.weights_scale_factor, node.q.bias_scale_factor] | max if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
 #define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
@@ -44,25 +46,25 @@ static inline void {{ node.layer.name }}(
   LONG_NUMBER_T output_acc;
 
   for (k = 0; k < FC_UNITS; k++) { 
-{% if node.layer.use_bias %}
-    output_acc = scale(NUMBER_T, (LONG_NUMBER_T)bias[k], -INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-{% else %}
     output_acc = 0;
-{% endif %}
-       //output_acc += 8;
     for (z = 0; z < INPUT_SAMPLES; z++) 
       output_acc = output_acc + ((LONG_NUMBER_T)kernel[k][z] * (LONG_NUMBER_T)input[z]);
+
+    output_acc = scale(NUMBER_T, output_acc, WEIGHTS_SCALE_FACTOR - TMP_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% if node.layer.use_bias %}
+    output_acc += scale(NUMBER_T, (LONG_NUMBER_T)bias[k], BIASES_SCALE_FACTOR - TMP_SCALE_FACTOR - INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% endif %}
 
     // Activation function
 #ifdef ACTIVATION_LINEAR
     // Linear (MEANS NONE)
-    output[k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+    output[k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
     // ReLU
     if (output_acc < 0) {
       output[k] = 0;
     } else {
-      output[k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+      output[k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     }
 #endif
   }
@@ -128,6 +130,7 @@ static inline void {{ node.layer.name }}(
 #undef FC_UNITS
 #undef ACTIVATION_{{ node.layer.activation.name | upper }}
 #undef WEIGHTS_SCALE_FACTOR
+#undef BIASES_SCALE_FACTOR
 #undef INPUT_SCALE_FACTOR
 #undef OUTPUT_SCALE_FACTOR
 #undef NUMBER_T
