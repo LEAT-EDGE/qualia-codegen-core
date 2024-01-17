@@ -32,7 +32,7 @@ int main(int argc, const char*argv[]) {
 	for (size_t i = 0; i < MODEL_INPUT_DIMS; i++) {
 		// Fixed-point conversion if model input is integer
 		if constexpr(std::is_integral_v<MODEL_INPUT_NUMBER_T>) {
-			input_flat[i] = clamp_to(MODEL_INPUT_NUMBER_T, (MODEL_INPUT_LONG_NUMBER_T)round_with_mode(strtof(argv[i + 1], NULL) * (1<<MODEL_INPUT_SCALE_FACTOR)));
+			input_flat[i] = clamp_to(MODEL_INPUT_NUMBER_T, (MODEL_INPUT_LONG_NUMBER_T)round_with_mode(strtof(argv[i + 1], NULL) * (1<<MODEL_INPUT_SCALE_FACTOR), MODEL_INPUT_ROUND_MODE));
 		} else {
 			input_flat[i] = strtof(argv[i + 1], NULL);
 		}
