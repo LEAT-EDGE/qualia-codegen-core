@@ -72,6 +72,9 @@ static inline void {{ node.layer.name }}(
 {% if not node.layer.use_bias %}
 #error "CMSIS-NN requires the use of bias"
 {% endif %}
+#if BIASES_SCALE_FACTOR > WEIGHTS_SCALE_FACTOR
+#error "CMSIS-NN does not support BIASES_SCALE_FACTOR larger than WEIGHTS_SCALE_FACTOR"
+#endif
 {% if qtype2ctype(node.q.number_type, node.q.width) == 'int8_t' %}
   static q15_t bufferA[INPUT_SAMPLES];
 #ifdef WITH_CMSIS_NN
@@ -83,7 +86,7 @@ static inline void {{ node.layer.name }}(
                              (q7_t*)kernel,
                              INPUT_SAMPLES,
                              FC_UNITS,
-                             INPUT_SCALE_FACTOR,
+                             INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - BIASES_SCALE_FACTOR, //bias_shift
                              INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR,
                              (q7_t*)bias,
                              (q7_t*)output,
@@ -107,7 +110,7 @@ static inline void {{ node.layer.name }}(
                              (q15_t*)kernel,
                              INPUT_SAMPLES,
                              FC_UNITS,
-                             INPUT_SCALE_FACTOR,
+                             INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - BIASES_SCALE_FACTOR,
                              INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR,
                              (q15_t*)bias,
                              (q15_t*)output,

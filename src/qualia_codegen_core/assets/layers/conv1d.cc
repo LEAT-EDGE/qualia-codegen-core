@@ -98,6 +98,9 @@ static inline void {{ node.layer.name }}(
 {% if not node.layer.use_bias %}
 #error "CMSIS-NN requires the use of bias"
 {% endif %}
+#if BIASES_SCALE_FACTOR > WEIGHTS_SCALE_FACTOR
+#error "CMSIS-NN does not support BIASES_SCALE_FACTOR larger than WEIGHTS_SCALE_FACTOR"
+#endif
 {% if qtype2ctype(node.q.number_type, node.q.width) == 'int8_t' %}
 
   static q15_t bufferA[2*INPUT_CHANNELS*CONV_KERNEL_SIZE];
@@ -127,7 +130,7 @@ static inline void {{ node.layer.name }}(
                                       CONV_STRIDE, //stride_x
                                       1, //stride_y
                                       (q7_t*)bias, //bias
-                                      INPUT_SCALE_FACTOR, //bias_shift
+                                      INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - BIASES_SCALE_FACTOR, //bias_shift
                                       INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, //out_shift
                                       (q7_t*)output, //Im_out
                                       CONV_OUTSAMPLES, //dim_im_out_x
@@ -171,7 +174,7 @@ static inline void {{ node.layer.name }}(
                                       CONV_STRIDE, //stride_x
                                       1, //stride_y
                                       (q15_t*)bias, //bias
-                                      INPUT_SCALE_FACTOR, //bias_shift
+                                      INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - BIASES_SCALE_FACTOR, //bias_shift
                                       INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, //out_shift
                                       (q15_t*)output, //Im_out
                                       CONV_OUTSAMPLES, //dim_im_out_x
