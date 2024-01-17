@@ -45,10 +45,11 @@ class Quantizer:
         new_arr = np.clip(new_arr, self.number_min, self.number_max)
         return new_arr.astype(target_dtype)
 
-    def quantize_weights_with_scale_factor(self,
+    def quantize_weights_with_scale_factor(self,  # noqa: PLR0913
                                            node: LayerNode,
                                            scale_factor: int,
                                            round_mode: RoundMode,
+                                           bias_scale_factor: int | None = None,
                                            exclude: list[str] | None = None) -> bool:
 
         for weights_name, weights in node.layer.weights.items():
@@ -56,9 +57,13 @@ class Quantizer:
             if exclude and weights_name in exclude:
                 continue
 
-            new_weights = self.quantize_array_with_scale_factor(weights, scale_factor=scale_factor, round_mode=round_mode)
+            if bias_scale_factor is not None and weights_name == 'bias': # Quantize biases with their own scale factor if it exists
+                new_weights = self.quantize_array_with_scale_factor(weights, scale_factor=bias_scale_factor, round_mode=round_mode)
+            else:
+                new_weights = self.quantize_array_with_scale_factor(weights, scale_factor=scale_factor, round_mode=round_mode)
             if new_weights is None:
                 return False
+
 
             setattr(node.layer, weights_name, new_weights)
 
@@ -78,5 +83,6 @@ class Quantizer:
             return self.quantize_weights_with_scale_factor(node,
                                                            node.q.weights_scale_factor,
                                                            round_mode=node.q.weights_round_mode,
+                                                           bias_scale_factor=node.q.bias_scale_factor,
                                                            exclude=exclude)
         return True
