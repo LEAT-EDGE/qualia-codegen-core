@@ -18,6 +18,8 @@
 
 // For fixed point quantization
 #define WEIGHTS_SCALE_FACTOR {{ node.q.weights_scale_factor }}
+#define BIASES_SCALE_FACTOR {{ node.q.bias_scale_factor if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
+#define TMP_SCALE_FACTOR {{ [node.q.weights_scale_factor, node.q.bias_scale_factor] | max if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
 #define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
@@ -35,19 +37,23 @@ static inline void {{ node.layer.name }}(
 
   for (int x = 0; x < INPUT_SAMPLES; x++) {
     for (int z = 0; z < INPUT_CHANNELS; z++) {
-      tmp = scale(NUMBER_T, (LONG_NUMBER_T)bias[z], -INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-      tmp += (LONG_NUMBER_T)input[x][z] * (LONG_NUMBER_T)kernel[z];
+      tmp = (LONG_NUMBER_T)input[x][z] * (LONG_NUMBER_T)kernel[z];
+
+      // Scale for possible additional precision of bias
+      tmp = scale(NUMBER_T, tmp, WEIGHTS_SCALE_FACTOR - TMP_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+      // Scale bias to match accumulator
+      tmp += scale(NUMBER_T, (LONG_NUMBER_T)bias[z], BIASES_SCALE_FACTOR - TMP_SCALE_FACTOR - INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 
       // Activation function
 #ifdef ACTIVATION_LINEAR
       // Linear (MEANS NONE)
-      output[x][z] = scale_and_clamp_to(NUMBER_T, tmp, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+      output[x][z] = scale_and_clamp_to(NUMBER_T, tmp, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
       // ReLU
       if (tmp < 0) {
         output[x][z] = 0;
       } else {
-        output[x][z] = scale_and_clamp_to(NUMBER_T, tmp, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+        output[x][z] = scale_and_clamp_to(NUMBER_T, tmp, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       }
 #endif
     }
@@ -58,5 +64,7 @@ static inline void {{ node.layer.name }}(
 #undef INPUT_SAMPLES
 #undef ACTIVATION_{{ node.layer.activation.name | upper if node.layer.activation is defined else "LINEAR" }}
 #undef WEIGHTS_SCALE_FACTOR
+#undef BIASES_SCALE_FACTOR
+#undef TMP_SCALE_FACTOR
 #undef INPUT_SCALE_FACTOR
 #undef OUTPUT_SCALE_FACTOR
