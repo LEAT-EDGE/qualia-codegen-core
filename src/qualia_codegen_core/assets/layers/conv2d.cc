@@ -44,6 +44,8 @@
 
 // For fixed point quantization
 #define WEIGHTS_SCALE_FACTOR {{ node.q.weights_scale_factor }}
+#define BIASES_SCALE_FACTOR {{ node.q.bias_scale_factor if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
+#define TMP_SCALE_FACTOR {{ [node.q.weights_scale_factor, node.q.bias_scale_factor] | max if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
 #define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
@@ -70,13 +72,9 @@ static inline void {{ node.layer.name }}(
   for (k = 0; k < CONV_FILTERS; k++) { 
     for (pos_y = 0; pos_y < CONV_OUTHEIGHT; pos_y++) { 
       for (pos_x = 0; pos_x < CONV_OUTWIDTH; pos_x++) { 
-{% if node.layer.use_bias %}
-        output_acc[pos_y][pos_x] = scale(NUMBER_T, (LONG_NUMBER_T)bias[k], -INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-{% else %}
         output_acc[pos_y][pos_x] = 0;
-{% endif %}
-        for (z = 0; z < INPUT_CHANNELS; z++) {
 
+        for (z = 0; z < INPUT_CHANNELS; z++) {
           kernel_mac = 0; 
             
           for (y = 0; y < CONV_KERNEL_SIZE_Y; y++) {
@@ -94,20 +92,27 @@ static inline void {{ node.layer.name }}(
           }
 
           output_acc[pos_y][pos_x] = output_acc[pos_y][pos_x] + kernel_mac;
+
         }
       }
     }
 
+    output_acc[pos_y][pos_x] = scale(NUMBER_T, output_acc[pos_y][pos_x],  WEIGHTS_SCALE_FACTOR - TMP_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% if node.layer.use_bias %}
+    output_acc[pos_y][pos_x] += scale(NUMBER_T, (LONG_NUMBER_T)bias[k], BIASES_SCALE_FACTOR - TMP_SCALE_FACTOR - INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% endif %}
+
     for (pos_y = 0; pos_y < CONV_OUTHEIGHT; pos_y++) { 
       for (pos_x = 0; pos_x < CONV_OUTWIDTH; pos_x++) { 
+
 #ifdef ACTIVATION_LINEAR
-        output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+        output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
         // Activation function: ReLU
         if (output_acc[pos_y][pos_x] < 0) {
           output[pos_y][pos_x][k] = 0;
         } else {
-          output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+          output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
         }
 #endif
       }
@@ -212,6 +217,8 @@ static inline void {{ node.layer.name }}(
 #undef CONV_OUTHEIGHT
 #undef ACTIVATION_{{ node.layer.activation.name | upper }}
 #undef WEIGHTS_SCALE_FACTOR
+#undef BIASES_SCALE_FACTOR
+#undef TMP_SCALE_FACTOR
 #undef INPUT_SCALE_FACTOR
 #undef OUTPUT_SCALE_FACTOR
 #undef NUMBER_T
