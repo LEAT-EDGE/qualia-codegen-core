@@ -37,6 +37,8 @@
 
 // For fixed point quantization
 #define WEIGHTS_SCALE_FACTOR {{ node.q.weights_scale_factor }}
+#define BIASES_SCALE_FACTOR {{ node.q.bias_scale_factor if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
+#define TMP_SCALE_FACTOR {{ [node.q.weights_scale_factor, node.q.bias_scale_factor] | max if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
 #define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
@@ -60,11 +62,7 @@ static inline void {{ node.layer.name }}(
 
   for (pos_x = 0; pos_x < CONV_OUTSAMPLES; pos_x++) { 
     for (k = 0; k < CONV_FILTERS; k++) { 
-{% if node.layer.use_bias %}
-      output_acc = scale(NUMBER_T, (LONG_NUMBER_T)bias[k], -INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-{% else %}
       output_acc = 0;
-{% endif %}
 
       for (x = 0; x < CONV_KERNEL_SIZE; x++) {
         input_x = pos_x * CONV_STRIDE - ZEROPADDING_LEFT + x;
@@ -75,15 +73,22 @@ static inline void {{ node.layer.name }}(
           }
         }
       }
+
+    // Scale for possible additional precision of bias
+    output_acc = scale(NUMBER_T, output_acc, WEIGHTS_SCALE_FACTOR - TMP_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% if node.layer.use_bias %}
+    // Scale bias to match accumulator
+    output_acc += scale(NUMBER_T, (LONG_NUMBER_T)bias[k], BIASES_SCALE_FACTOR - TMP_SCALE_FACTOR - INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% endif %}
       
 #ifdef ACTIVATION_LINEAR
-      output[pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+      output[pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
 #elif defined(ACTIVATION_RELU)
       // Activation function: ReLU
       if (output_acc < 0) {
         output[pos_x][k] = 0;
       } else {
-        output[pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + WEIGHTS_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+        output[pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       }
 #endif
     }
@@ -198,6 +203,8 @@ static inline void {{ node.layer.name }}(
 #undef CONV_OUTSAMPLES
 #undef ACTIVATION_{{ node.layer.activation.name | upper }}
 #undef WEIGHTS_SCALE_FACTOR
+#undef BIASES_SCALE_FACTOR
+#undef TMP_SCALE_FACTOR
 #undef INPUT_SCALE_FACTOR
 #undef OUTPUT_SCALE_FACTOR
 #undef NUMBER_T
