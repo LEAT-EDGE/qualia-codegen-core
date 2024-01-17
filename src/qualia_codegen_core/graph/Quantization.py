@@ -13,6 +13,7 @@ class Quantization:
     width: int | None = None
     long_width: int | None = None
     weights_scale_factor: int | None = None
+    bias_scale_factor: int | None = None
     output_scale_factor: int | None = None
     weights_round_mode: RoundMode | None = None
     output_round_mode: RoundMode | None = None
