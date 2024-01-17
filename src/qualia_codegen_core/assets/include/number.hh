@@ -18,6 +18,12 @@ extern "C" {
 #include <stddef.h>
 #include <math.h>
 
+#ifdef TRAPV_SHIFT
+#include <limits.h>
+#include <stdio.h>
+#include <assert.h>
+#endif
+
 #ifdef WITH_CMSIS_NN
 #include "arm_nnfunctions.h"
 #endif
@@ -80,7 +86,20 @@ static inline {{ qtype2ctype(number_type.number_type, number_type.width) }} scal
 {% else -%}
 static inline {{ qtype2ctype(number_type.number_type, number_type.long_width) }} scale_number_t_{{ qtype2ctype(number_type.number_type, number_type.width) }}(
   {{ qtype2ctype(number_type.number_type, number_type.long_width) }} number, int scale_factor, round_mode_t round_mode) {
+
+
   if (scale_factor <= 0) {
+#ifdef TRAPV_SHIFT
+    // Check for possible overflow of left shift
+    if (number > {{ number_type.number_type.__name__ | upper }}{{ number_type.long_width }}_MAX >> -scale_factor) {
+      fprintf(stderr,
+              "Error: scale() overflow, number={{ '%ld' if number_type.long_width > 32 else '%d' }}, scale_factor=%d, limit=%d\n",
+              number,
+              scale_factor,
+              INT16_MAX >> -scale_factor);
+      assert(number <= {{ number_type.number_type.__name__ | upper }}{{ number_type.long_width }}_MAX >> -scale_factor);
+    }
+#endif
     // No rounding to apply when shifting left
     return number << - scale_factor;
   } else {
