@@ -39,7 +39,7 @@ static inline void {{ node.layer.name }}(
   for (size_t y = 0; y < INPUT_HEIGHT; y++) {
     for (size_t x = 0; x < INPUT_WIDTH; x++) {
       for (size_t z = 0; z < INPUT_CHANNELS; z++) {
-        tmp += (LONG_NUMBER_T)input[y][x][z] * (LONG_NUMBER_T)kernel[z];
+        tmp = (LONG_NUMBER_T)input[y][x][z] * (LONG_NUMBER_T)kernel[z];
 
         // Scale for possible additional precision of bias
         tmp = scale(NUMBER_T, tmp, WEIGHTS_SCALE_FACTOR - TMP_SCALE_FACTOR, OUTPUT_ROUND_MODE);
