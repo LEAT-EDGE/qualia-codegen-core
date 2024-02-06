@@ -148,6 +148,9 @@ class TorchModelGraph(ModelGraph):
         'sum': lambda dim: (TSumLayer, [TorchModelGraph.array_or_scalar(dim)]),
     }
 
+    FUNCTION_MAPPING: ClassVar[dict[Callable[..., Any], Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
+    }
+
     # Custom tracer that generates call_module for our custom Qualia layers instead of attempting to trace their forward()
     class TracerCustomLayers(Tracer):
         def __init__(self, custom_layers: tuple[type[Module], ...]) -> None:
@@ -379,13 +382,58 @@ class TorchModelGraph(ModelGraph):
                 output_dtype=outputs_dtype,
                 name=layer.name)
 
-        options = TorchModelGraph.METHOD_MAPPING.get(layer.target, None)
+        options = self.METHOD_MAPPING.get(layer.target, None)
 
         if options is None:
             logger.error('Unsupported Torch method: %s', layer.target)
             return None
 
         layercls, opts = options(*method_args, **method_kwargs)
+        return layercls(*dataclasses.astuple(args), *opts) # args and opts must be specified in the correct order
+
+    def _convert_call_function(self, layer: Node) -> TBaseLayer | None:
+        if not callable(layer.target):
+            logger.error('Function should be callable, got type: %s', type(layer.target))
+            return None
+
+        # self_obj is the object (layer's output tensor) the method is called on, args are the method's arguments
+        function_args = self.__load_arg(layer.args)
+        # kwargs are the methods's keyword arguments
+        function_kwargs = self.__load_arg(layer.kwargs)
+        function = layer.target
+        function_outputs = function(*function_args, **function_kwargs)
+        self.__layer_outputs[layer.name] = function_outputs
+        dummy_outputs = (function_outputs,) if isinstance(function_outputs, Tensor) else tuple(function_outputs)
+
+        # Extract function args which are Tensor (i.e., inputs) to get their shapes and filter out extra arguments
+        args_tensor = [ref for ref, val in zip(layer.args, function_args) if isinstance(val, Tensor)]
+
+        # Handle multiple inputs, for a possible Concat layer, Add layer handled as well even though shape should be identical
+        inputs_shape = self.__get_layer_output_shapes(args_tensor)
+        if inputs_shape is False:
+            logger.error('Could not get input shapes for "%s"', layer.target)
+            return None
+
+        outputs_shape = self.__get_tensor_output_shapes(dummy_outputs)
+
+        outputs_dtype = self.__get_tensor_output_dtypes(dummy_outputs)
+        if outputs_dtype is False:
+            logger.error('Could not get output dtypes for "%s"', layer.target)
+            return None
+
+        # Not the final layer type, just used to collect the common args
+        args = TBaseLayer(input_shape=inputs_shape,
+                output_shape=outputs_shape,
+                output_dtype=outputs_dtype,
+                name=layer.name)
+
+        options = self.FUNCTION_MAPPING.get(layer.target, None)
+
+        if options is None:
+            logger.error('Unsupported Torch function: %s', layer.target)
+            return None
+
+        layercls, opts = options(*function_args, **function_kwargs)
         return layercls(*dataclasses.astuple(args), *opts) # args and opts must be specified in the correct order
 
     def __convert_iterable(self, it: IterableNode) -> Literal[False] | tuple[TBaseLayer | None, ...]:
@@ -426,6 +474,8 @@ class TorchModelGraph(ModelGraph):
                 return None
         elif op == 'call_method':
             res = self._convert_call_method(layer)
+        elif op == 'call_function':
+            res = self._convert_call_function(layer)
         else: # Unsupported
             logger.error('Unsupported Torch op %s, type: %s', op, type(layer))
             return False
