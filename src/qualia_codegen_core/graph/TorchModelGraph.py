@@ -32,6 +32,7 @@ from torch.nn import (
     ReLU,
     ReLU6,
 )
+from torch.nn.functional import adaptive_avg_pool2d
 
 from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shape, Shapes
 
@@ -152,10 +153,21 @@ class TorchModelGraph(ModelGraph):
 
     FUNCTION_MAPPING: ClassVar[dict[Callable[..., Any], Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
         operator.add: lambda *_: (TAddLayer, []),
+        adaptive_avg_pool2d: lambda x, output_size: (TAvgPooling2DLayer,
+                                                 [TActivation.LINEAR,
+                                                  (x.shape[-2] // TorchModelGraph.array_or_scalar(
+                                                     output_size)[0],
+                                                   x.shape[-1] // TorchModelGraph.array_or_scalar(
+                                                     output_size)[1]),
+                                                  (x.shape[-2] // TorchModelGraph.array_or_scalar(
+                                                      output_size)[0],
+                                                   x.shape[-1] // TorchModelGraph.array_or_scalar(
+                                                      output_size)[1])]),
     }
 
     FUNCTION_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any], tuple[int, ...]]] = {
         operator.add: (0, 1),
+        adaptive_avg_pool2d: (0,),
     }
 
     # Custom tracer that generates call_module for our custom Qualia layers instead of attempting to trace their forward()
