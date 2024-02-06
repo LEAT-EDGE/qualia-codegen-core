@@ -15,6 +15,14 @@
 #endif
 
 #define INPUT_CHANNELS  {{ node.input_shape[0][-1] }}
+#define INPUT_HEIGHT    {{ node.input_shape[0][-3] }}
+#define INPUT_WIDTH     {{ node.input_shape[0][-2] }}
+#define POOL_SIZE_Y     {{ node.layer.pool_size[0] }}
+#define POOL_SIZE_X     {{ node.layer.pool_size[1] if node.layer.pool_size | length > 1 else node.layer.pool_size[0] }}
+#define POOL_STRIDE_Y   {{ node.layer.strides[0] }}
+#define POOL_STRIDE_X   {{ node.layer.strides[1] if node.layer.strides | length > 1 else node.layer.strides[0] }}
+#define POOL_PAD_Y      0 // Unsupported
+#define POOL_PAD_X      0 // Unsupported
 #define POOL_HEIGHT	    ( ( (INPUT_HEIGHT - POOL_SIZE_Y + (2*POOL_PAD_Y) ) / POOL_STRIDE_Y ) + 1 )
 #define POOL_WIDTH	    ( ( (INPUT_WIDTH - POOL_SIZE_X + (2*POOL_PAD_X) ) / POOL_STRIDE_X ) + 1 )
 
@@ -27,6 +35,14 @@ void {{ node.layer.name }}(
 #endif
 
 #undef INPUT_CHANNELS 
+#undef INPUT_WIDTH
+#undef INPUT_HEIGHT
+#undef POOL_SIZE_X
+#undef POOL_SIZE_Y
+#undef POOL_STRIDE_X
+#undef POOL_STRIDE_Y
+#undef POOL_PAD_X
+#undef POOL_PAD_Y
 #undef POOL_HEIGHT
 #undef POOL_WIDTH
 
