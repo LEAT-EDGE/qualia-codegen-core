@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import functools
 import logging
+import operator
 import sys
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, Union, cast
@@ -36,6 +37,7 @@ from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shape, Shapes
 
 from .layers import (
     TActivationLayer,
+    TAddLayer,
     TAvgPooling1DLayer,
     TAvgPooling2DLayer,
     TBaseLayer,
@@ -149,9 +151,11 @@ class TorchModelGraph(ModelGraph):
     }
 
     FUNCTION_MAPPING: ClassVar[dict[Callable[..., Any], Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
+        operator.add: lambda *_: (TAddLayer, []),
     }
 
     FUNCTION_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any], tuple[int, ...]]] = {
+        operator.add: (0, 1),
     }
 
     # Custom tracer that generates call_module for our custom Qualia layers instead of attempting to trace their forward()
