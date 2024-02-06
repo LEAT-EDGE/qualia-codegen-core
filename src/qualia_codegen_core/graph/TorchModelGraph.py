@@ -151,6 +151,9 @@ class TorchModelGraph(ModelGraph):
     FUNCTION_MAPPING: ClassVar[dict[Callable[..., Any], Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
     }
 
+    FUNCTION_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any], tuple[int, ...]]] = {
+    }
+
     # Custom tracer that generates call_module for our custom Qualia layers instead of attempting to trace their forward()
     class TracerCustomLayers(Tracer):
         def __init__(self, custom_layers: tuple[type[Module], ...]) -> None:
@@ -488,7 +491,13 @@ class TorchModelGraph(ModelGraph):
 
     def __get_layer_input_layers(self, layer: Node) -> Literal[False] | list[TBaseLayer]:
         inlayers: list[TBaseLayer] = []
-        for x in layer.args:
+        args = layer.args
+
+        # Special handling for functions where not all args should be considered as input, i.e., a node in the graph
+        if layer.op == 'call_function':
+            args = [args[i] for i in self.FUNCTION_INPUT_ARG_INDEX[layer.target]]
+
+        for x in args:
             if not self.__is_iterablenode_recursive(x): # Input arg to a Node should be a Node or Iterable of Node
                 logger.error('Node arg type "%s" is not Node or Iterable of Node', type(x))
                 return False
