@@ -108,11 +108,16 @@ static inline void {{ node.layer.name }}(
 
 #ifdef ACTIVATION_LINEAR
         output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-#elif defined(ACTIVATION_RELU)
+#elif defined(ACTIVATION_RELU) || defined(ACTIVATION_RELU6)
         // Activation function: ReLU
         if (output_acc[pos_y][pos_x] < 0) {
           output[pos_y][pos_x][k] = 0;
         } else {
+#if defined(ACTIVATION_RELU6)
+        if (output_acc[pos_y][pos_x] > scale(NUMBER_T, 6, -(INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR), OUTPUT_ROUND_MODE)) {
+          output_acc[pos_y][pos_x] = scale(NUMBER_T, 6, -(INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR), OUTPUT_ROUND_MODE);
+        }
+#endif
           output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
         }
 #endif

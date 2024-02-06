@@ -6,9 +6,10 @@ from .TBaseLayer import TBaseLayer
 
 class TActivation(Enum):
     RELU = 0
-    SOFTMAX = 1
-    LINEAR = 2
-    IF = 3
+    RELU6 = 1
+    SOFTMAX = 2
+    LINEAR = 3
+    IF = 4
 
 
 @dataclass

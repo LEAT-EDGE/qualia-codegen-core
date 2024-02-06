@@ -29,6 +29,7 @@ from torch.nn import (
     MaxPool2d,
     Module,
     ReLU,
+    ReLU6,
 )
 
 from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shape, Shapes
@@ -116,6 +117,7 @@ class TorchModelGraph(ModelGraph):
                                                   ((cast(Conv2d, module).padding[0], ) * 2,
                                                    (cast(Conv2d, module).padding[1], ) * 2)]),
         ReLU: lambda *_: (TActivationLayer, [TActivation.RELU]),
+        ReLU6: lambda *_: (TActivationLayer, [TActivation.RELU6]),
         MaxPool1d: lambda module, _: (TMaxPooling1DLayer, [TActivation.LINEAR,
                                                            TorchModelGraph.array_or_scalar(cast(MaxPool1d, module).kernel_size),
                                                            TorchModelGraph.array_or_scalar(cast(MaxPool1d, module).stride)]),
