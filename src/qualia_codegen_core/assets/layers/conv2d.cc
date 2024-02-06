@@ -97,13 +97,14 @@ static inline void {{ node.layer.name }}(
       }
     }
 
-    output_acc[pos_y][pos_x] = scale(NUMBER_T, output_acc[pos_y][pos_x],  WEIGHTS_SCALE_FACTOR - TMP_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-{% if node.layer.use_bias %}
-    output_acc[pos_y][pos_x] += scale(NUMBER_T, (LONG_NUMBER_T)bias[k], BIASES_SCALE_FACTOR - TMP_SCALE_FACTOR - INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-{% endif %}
-
     for (pos_y = 0; pos_y < CONV_OUTHEIGHT; pos_y++) { 
       for (pos_x = 0; pos_x < CONV_OUTWIDTH; pos_x++) { 
+        // Scale for possible additional precision of bias
+        output_acc[pos_y][pos_x] = scale(NUMBER_T, output_acc[pos_y][pos_x],  WEIGHTS_SCALE_FACTOR - TMP_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% if node.layer.use_bias %}
+        // Scale bias to match accumulator
+        output_acc[pos_y][pos_x] += scale(NUMBER_T, (LONG_NUMBER_T)bias[k], BIASES_SCALE_FACTOR - TMP_SCALE_FACTOR - INPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
+{% endif %}
 
 #ifdef ACTIVATION_LINEAR
         output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
