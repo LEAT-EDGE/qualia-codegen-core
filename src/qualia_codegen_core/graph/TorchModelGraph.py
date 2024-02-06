@@ -108,6 +108,7 @@ class TorchModelGraph(ModelGraph):
                                                   cast(Conv1d, module).bias is not None,
                                                   module.bias.detach().numpy()
                                                       if isinstance(module, Conv1d) and module.bias is not None else None,
+                                                  cast(Conv1d, module).groups,
                                                   list(cast(Conv1d, module).padding) * 2]),
         Conv2d: lambda module, _: (TConv2DLayer, [TActivation.LINEAR,
                                                   TorchModelGraph.transpose(cast(Conv2d, module).weight.detach().numpy()),
@@ -117,6 +118,7 @@ class TorchModelGraph(ModelGraph):
                                                   cast(Conv2d, module).bias is not None,
                                                   module.bias.detach().numpy()
                                                       if isinstance(module, Conv2d) and module.bias is not None else None,
+                                                  cast(Conv2d, module).groups,
                                                   ((cast(Conv2d, module).padding[0], ) * 2,
                                                    (cast(Conv2d, module).padding[1], ) * 2)]),
         ReLU: lambda *_: (TActivationLayer, [TActivation.RELU]),

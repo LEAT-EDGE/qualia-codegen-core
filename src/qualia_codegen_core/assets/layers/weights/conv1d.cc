@@ -12,12 +12,14 @@
 #define INPUT_CHANNELS    {{ node.input_shape[0][-1] }}
 #define CONV_FILTERS      {{ node.layer.filters }}
 #define CONV_KERNEL_SIZE  {{ node.layer.kernel_size[0] }}
+#define CONV_GROUPS       {{ node.layer.groups }}
 
 {% if node.layer.use_bias %}
 const {{ weights.bias.dtype }}  {{ node.layer.name }}_bias[CONV_FILTERS] = {{ weights.bias.data }};
 {% endif %}
-const {{ weights.kernel.dtype }}  {{ node.layer.name }}_kernel[CONV_FILTERS][CONV_KERNEL_SIZE][INPUT_CHANNELS] = {{ weights.kernel.data }};
+const {{ weights.kernel.dtype }}  {{ node.layer.name }}_kernel[CONV_FILTERS][CONV_KERNEL_SIZE][INPUT_CHANNELS / CONV_GROUPS] = {{ weights.kernel.data }};
 
 #undef INPUT_CHANNELS
 #undef CONV_FILTERS
 #undef CONV_KERNEL_SIZE
+#undef CONV_GROUPS
