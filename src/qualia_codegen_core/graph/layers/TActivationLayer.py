@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 from .TBaseLayer import TBaseLayer
@@ -14,5 +14,3 @@ class TActivation(Enum):
 @dataclass
 class TActivationLayer(TBaseLayer):
     activation: TActivation
-    bias: object = field(default_factory=list)
-    use_bias: bool = False
