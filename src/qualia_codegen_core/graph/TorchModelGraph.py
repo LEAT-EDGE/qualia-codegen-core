@@ -136,7 +136,8 @@ class TorchModelGraph(ModelGraph):
                                                            cast(AvgPool2d, module).kernel_size,
                                                            cast(AvgPool2d, module).stride]),
         AdaptiveAvgPool1d: lambda module, args: (TAvgPooling1DLayer,
-                                                 [(args.input_shape[0][-1] // TorchModelGraph.array_or_scalar(
+                                                 [TActivation.LINEAR,
+                                                  (args.input_shape[0][-1] // TorchModelGraph.array_or_scalar(
                                                      cast(AdaptiveAvgPool1d, module).output_size)[0], ),
                                                   (args.input_shape[0][-1] // TorchModelGraph.array_or_scalar(
                                                       cast(AdaptiveAvgPool1d, module).output_size)[0], )]),
