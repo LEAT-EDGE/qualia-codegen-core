@@ -7,5 +7,5 @@ from .TBaseLayer import TBaseLayer
 @dataclass
 class TMaxPoolingLayer(TBaseLayer):
     activation: TActivation
-    pool_size: int
-    strides: object
+    pool_size: tuple[int, ...]
+    strides: tuple[int, ...]
