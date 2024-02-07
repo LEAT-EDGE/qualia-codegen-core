@@ -168,7 +168,7 @@ class TorchModelGraph(ModelGraph):
                                                       output_size)[1])]),
     }
 
-    FUNCTION_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any], tuple[int, ...]]] = {
+    FUNCTION_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any] | str, tuple[int, ...]]] = {
         operator.add: (0, 1),
         adaptive_avg_pool2d: (0,),
     }
@@ -428,7 +428,9 @@ class TorchModelGraph(ModelGraph):
         dummy_outputs = (function_outputs,) if isinstance(function_outputs, Tensor) else tuple(function_outputs)
 
         # Extract function args which are Tensor (i.e., inputs) to get their shapes and filter out extra arguments
-        args_tensor = [ref for ref, val in zip(layer.args, function_args) if isinstance(val, Tensor)]
+        # Assume result is of type Node which means a layer in the graph since that's what should generate Tensor.
+        # Warning: not recursive, hopefully not a problem for a standalone function call
+        args_tensor = [cast(Node, ref) for ref, val in zip(layer.args, function_args) if isinstance(val, Tensor)]
 
         # Handle multiple inputs, for a possible Concat layer, Add layer handled as well even though shape should be identical
         inputs_shape = self.__get_layer_output_shapes(args_tensor)
@@ -514,7 +516,7 @@ class TorchModelGraph(ModelGraph):
 
         # Special handling for functions where not all args should be considered as input, i.e., a node in the graph
         if layer.op == 'call_function':
-            args = [args[i] for i in self.FUNCTION_INPUT_ARG_INDEX[layer.target]]
+            args = tuple(args[i] for i in self.FUNCTION_INPUT_ARG_INDEX[layer.target])
 
         for x in args:
             if not self.__is_iterablenode_recursive(x): # Input arg to a Node should be a Node or Iterable of Node
