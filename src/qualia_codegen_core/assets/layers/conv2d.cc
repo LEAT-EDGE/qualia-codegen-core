@@ -28,6 +28,7 @@
 #define CONV_STRIDE_X       {{ node.layer.strides[1] }}
 #define CONV_GROUPS         {{ node.layer.groups }}
 #define CHANNELS_PER_GROUP  (INPUT_CHANNELS / CONV_GROUPS)
+#define FILTERS_PER_GROUP   (CONV_FILTERS / CONV_GROUPS)
 {% if node.layer.padding == 'valid' %}
 #define ZEROPADDING_TOP     0
 #define ZEROPADDING_BOTTOM  0
@@ -88,7 +89,7 @@ static inline void {{ node.layer.name }}(
               if (input_x < 0 || input_x >= INPUT_WIDTH || input_y < 0 || input_y >= INPUT_HEIGHT) // ZeroPadding2D
                 tmp = 0;
               else
-                tmp = (LONG_NUMBER_T)input[input_y][input_x][z + (k / CHANNELS_PER_GROUP) * CHANNELS_PER_GROUP] * (LONG_NUMBER_T)kernel[k][y][x][z];
+                tmp = (LONG_NUMBER_T)input[input_y][input_x][z + (k / FILTERS_PER_GROUP) * CHANNELS_PER_GROUP] * (LONG_NUMBER_T)kernel[k][y][x][z];
               kernel_mac = kernel_mac + tmp;
             }
           }
@@ -222,6 +223,7 @@ static inline void {{ node.layer.name }}(
 #undef CONV_STRIDE_Y
 #undef CONV_GROUPS
 #undef CHANNELS_PER_GROUP
+#undef FILTERS_PER_GROUP
 #undef ZEROPADDING_TOP
 #undef ZEROPADDING_BOTTOM
 #undef ZEROPADDING_LEFT

@@ -26,6 +26,7 @@
 #define CONV_STRIDE         {{ node.layer.strides[0] }}
 #define CONV_GROUPS         {{ node.layer.groups }}
 #define CHANNELS_PER_GROUP  (INPUT_CHANNELS / CONV_GROUPS)
+#define FILTERS_PER_GROUP   (CONV_FILTERS / CONV_GROUPS)
 {% if node.layer.padding == 'valid' %}
 #define ZEROPADDING_LEFT    0
 #define ZEROPADDING_RIGHT   0
@@ -71,7 +72,7 @@ static inline void {{ node.layer.name }}(
 
         if (input_x >= 0 && input_x < INPUT_SAMPLES) { // ZeroPadding1D
           for (z = 0; z < INPUT_CHANNELS / CONV_GROUPS; z++) {
-            output_acc += (LONG_NUMBER_T)input[input_x][z + (k / CHANNELS_PER_GROUP) * CHANNELS_PER_GROUP] * (LONG_NUMBER_T)kernel[k][x][z];
+            output_acc += (LONG_NUMBER_T)input[input_x][z + (k / FILTERS_PER_GROUP) * CHANNELS_PER_GROUP] * (LONG_NUMBER_T)kernel[k][x][z];
           }
         }
       }
@@ -210,6 +211,7 @@ static inline void {{ node.layer.name }}(
 #undef CONV_STRIDE
 #undef CONV_GROUPS
 #undef CHANNELS_PER_GROUP
+#undef FILTERS_PER_GROUP
 #undef ZEROPADDING_LEFT
 #undef ZEROPADDING_RIGHT
 #undef CONV_OUTSAMPLES
