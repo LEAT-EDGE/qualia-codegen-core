@@ -6,14 +6,14 @@ import logging
 import sys
 from importlib.resources import files
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, cast
 
 import jinja2
 
 from .Allocator import Allocator
 from .DataConverter import DataConverter
 from .graph import layers
-from .graph.layers.TActivationLayer import TActivation
+from .graph.layers.TActivationLayer import TActivation, TActivationLayer
 from .Quantizer import Quantizer
 from .Validator import Validator
 
@@ -168,13 +168,13 @@ class Converter:
     def combine_relu(self, modelgraph: ModelGraph) -> ModelGraph | None:
         relunodes = [node for node in modelgraph.nodes
                         if isinstance(node.layer, layers.TActivationLayer)
-                        and node.layer.activation == TActivation.RELU]
+                        and node.layer.activation in [TActivation.RELU, TActivation.RELU6]]
         for relunode in relunodes:
             for innode in relunode.innodes:  # warning: activations_range unsupported with multiple inputs to relu
                 if not hasattr(innode.layer, 'activation'):
                     logger.error('Cannot fuse activation: "%s" does not have an activation attribute', innode.layer.name)
                     return None
-                innode.layer.activation = TActivation.RELU
+                innode.layer.activation = cast(TActivationLayer, relunode.layer).activation
                 innode.q.output_scale_factor = relunode.q.output_scale_factor
             modelgraph.delete_node(relunode)
         return modelgraph

@@ -26,6 +26,9 @@
 #define CONV_KERNEL_SIZE_X  {{ node.layer.kernel_size[1] }}
 #define CONV_STRIDE_Y       {{ node.layer.strides[0] }}
 #define CONV_STRIDE_X       {{ node.layer.strides[1] }}
+#define CONV_GROUPS         {{ node.layer.groups }}
+#define CHANNELS_PER_GROUP  (INPUT_CHANNELS / CONV_GROUPS)
+#define FILTERS_PER_GROUP   (CONV_FILTERS / CONV_GROUPS)
 {% if node.layer.padding == 'valid' %}
 #define ZEROPADDING_TOP     0
 #define ZEROPADDING_BOTTOM  0
@@ -55,7 +58,7 @@
 
 static inline void {{ node.layer.name }}(
   const NUMBER_T input[INPUT_HEIGHT][INPUT_WIDTH][INPUT_CHANNELS],               // IN
-  const NUMBER_T kernel[CONV_FILTERS][CONV_KERNEL_SIZE_X][CONV_KERNEL_SIZE_Y][INPUT_CHANNELS], // IN
+  const NUMBER_T kernel[CONV_FILTERS][CONV_KERNEL_SIZE_X][CONV_KERNEL_SIZE_Y][INPUT_CHANNELS / CONV_GROUPS], // IN
 {% if node.layer.use_bias %}
   const NUMBER_T bias[CONV_FILTERS],						                // IN
 {% endif %}
@@ -74,7 +77,7 @@ static inline void {{ node.layer.name }}(
       for (pos_x = 0; pos_x < CONV_OUTWIDTH; pos_x++) { 
         output_acc[pos_y][pos_x] = 0;
 
-        for (z = 0; z < INPUT_CHANNELS; z++) {
+        for (z = 0; z < INPUT_CHANNELS / CONV_GROUPS; z++) {
           kernel_mac = 0; 
             
           for (y = 0; y < CONV_KERNEL_SIZE_Y; y++) {
@@ -86,7 +89,7 @@ static inline void {{ node.layer.name }}(
               if (input_x < 0 || input_x >= INPUT_WIDTH || input_y < 0 || input_y >= INPUT_HEIGHT) // ZeroPadding2D
                 tmp = 0;
               else
-                tmp = (LONG_NUMBER_T)input[input_y][input_x][z] * (LONG_NUMBER_T)kernel[k][y][x][z];
+                tmp = (LONG_NUMBER_T)input[input_y][input_x][z + (k / FILTERS_PER_GROUP) * CHANNELS_PER_GROUP] * (LONG_NUMBER_T)kernel[k][y][x][z];
               kernel_mac = kernel_mac + tmp;
             }
           }
@@ -108,11 +111,16 @@ static inline void {{ node.layer.name }}(
 
 #ifdef ACTIVATION_LINEAR
         output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-#elif defined(ACTIVATION_RELU)
+#elif defined(ACTIVATION_RELU) || defined(ACTIVATION_RELU6)
         // Activation function: ReLU
         if (output_acc[pos_y][pos_x] < 0) {
           output[pos_y][pos_x][k] = 0;
         } else {
+#if defined(ACTIVATION_RELU6)
+        if (output_acc[pos_y][pos_x] > scale(NUMBER_T, 6, -(INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR), OUTPUT_ROUND_MODE)) {
+          output_acc[pos_y][pos_x] = scale(NUMBER_T, 6, -(INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR), OUTPUT_ROUND_MODE);
+        }
+#endif
           output[pos_y][pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc[pos_y][pos_x], INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
         }
 #endif
@@ -213,6 +221,9 @@ static inline void {{ node.layer.name }}(
 #undef CONV_KERNEL_SIZE_Y
 #undef CONV_STRIDE_X
 #undef CONV_STRIDE_Y
+#undef CONV_GROUPS
+#undef CHANNELS_PER_GROUP
+#undef FILTERS_PER_GROUP
 #undef ZEROPADDING_TOP
 #undef ZEROPADDING_BOTTOM
 #undef ZEROPADDING_LEFT

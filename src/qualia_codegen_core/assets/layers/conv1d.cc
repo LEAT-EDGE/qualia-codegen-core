@@ -24,6 +24,9 @@
 #define CONV_FILTERS        {{ node.layer.filters }}
 #define CONV_KERNEL_SIZE    {{ node.layer.kernel_size[0] }}
 #define CONV_STRIDE         {{ node.layer.strides[0] }}
+#define CONV_GROUPS         {{ node.layer.groups }}
+#define CHANNELS_PER_GROUP  (INPUT_CHANNELS / CONV_GROUPS)
+#define FILTERS_PER_GROUP   (CONV_FILTERS / CONV_GROUPS)
 {% if node.layer.padding == 'valid' %}
 #define ZEROPADDING_LEFT    0
 #define ZEROPADDING_RIGHT   0
@@ -48,7 +51,7 @@
 
 static inline void {{ node.layer.name }}(
   const NUMBER_T input[INPUT_SAMPLES][INPUT_CHANNELS],                    // IN
-  const NUMBER_T kernel[CONV_FILTERS][CONV_KERNEL_SIZE][INPUT_CHANNELS],  // IN
+  const NUMBER_T kernel[CONV_FILTERS][CONV_KERNEL_SIZE][INPUT_CHANNELS / CONV_GROUPS],  // IN
 {% if node.layer.use_bias %}
   const NUMBER_T bias[CONV_FILTERS],						                          // IN
 {% endif %}
@@ -68,8 +71,8 @@ static inline void {{ node.layer.name }}(
         input_x = pos_x * CONV_STRIDE - ZEROPADDING_LEFT + x;
 
         if (input_x >= 0 && input_x < INPUT_SAMPLES) { // ZeroPadding1D
-          for (z = 0; z < INPUT_CHANNELS; z++) {
-            output_acc += (LONG_NUMBER_T)input[input_x][z] * (LONG_NUMBER_T)kernel[k][x][z];
+          for (z = 0; z < INPUT_CHANNELS / CONV_GROUPS; z++) {
+            output_acc += (LONG_NUMBER_T)input[input_x][z + (k / FILTERS_PER_GROUP) * CHANNELS_PER_GROUP] * (LONG_NUMBER_T)kernel[k][x][z];
           }
         }
       }
@@ -83,11 +86,16 @@ static inline void {{ node.layer.name }}(
       
 #ifdef ACTIVATION_LINEAR
       output[pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
-#elif defined(ACTIVATION_RELU)
+#elif defined(ACTIVATION_RELU) || defined(ACTIVATION_RELU6)
       // Activation function: ReLU
       if (output_acc < 0) {
         output[pos_x][k] = 0;
       } else {
+#if defined(ACTIVATION_RELU6)
+        if (output_acc > scale(NUMBER_T, 6, -(INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR), OUTPUT_ROUND_MODE)) {
+          output_acc = scale(NUMBER_T, 6, -(INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR), OUTPUT_ROUND_MODE);
+        }
+#endif
         output[pos_x][k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
       }
 #endif
@@ -201,6 +209,9 @@ static inline void {{ node.layer.name }}(
 #undef CONV_FILTERS
 #undef CONV_KERNEL_SIZE
 #undef CONV_STRIDE
+#undef CONV_GROUPS
+#undef CHANNELS_PER_GROUP
+#undef FILTERS_PER_GROUP
 #undef ZEROPADDING_LEFT
 #undef ZEROPADDING_RIGHT
 #undef CONV_OUTSAMPLES

@@ -26,6 +26,7 @@ class TConvLayer(TBaseLayer):
     filters: int
     use_bias: bool
     bias: NDArrayFloatOrInt
+    groups: int
 
     @property
     @override

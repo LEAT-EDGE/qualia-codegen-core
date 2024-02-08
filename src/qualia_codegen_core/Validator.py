@@ -39,7 +39,7 @@ class Validator:
                                  layer.__class__.__name__)
                     return False
 
-            if layer.activation not in [TActivation.LINEAR, TActivation.RELU]:
+            if layer.activation not in [TActivation.LINEAR, TActivation.RELU, TActivation.RELU6]:
                 logger.error('Activation function %s not supported', layer.activation)
                 return False
 
