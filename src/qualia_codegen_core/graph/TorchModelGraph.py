@@ -166,11 +166,13 @@ class TorchModelGraph(ModelGraph):
                                                       output_size)[0],
                                                    x.shape[-1] // TorchModelGraph.array_or_scalar(
                                                       output_size)[1])]),
+       torch.flatten: lambda *_: (TFlattenLayer, []),
     }
 
     FUNCTION_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any] | str, tuple[int, ...]]] = {
         operator.add: (0, 1),
         adaptive_avg_pool2d: (0,),
+        torch.flatten: (0,),
     }
 
     # Custom tracer that generates call_module for our custom Qualia layers instead of attempting to trace their forward()
