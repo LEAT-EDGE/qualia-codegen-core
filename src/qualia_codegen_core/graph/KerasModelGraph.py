@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Final, Literal
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal
 
 from keras.activations import linear, relu, softmax  # type: ignore[import-untyped] # No stubs for keras package
 from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras package
@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 
 class KerasModelGraph(ModelGraph):
-    MAPPING: Final[dict[type[Layer], Callable[[Layer], tuple[type[TBaseLayer], list[Any]]]]] = {
+    MAPPING: ClassVar[dict[type[Layer], Callable[[Layer], tuple[type[TBaseLayer], list[Any]]]]] = {
         InputLayer: lambda _: (TInputLayer, []),
         ZeroPadding1D: lambda layer: (TZeroPadding1DLayer, [layer.padding]),
         ZeroPadding2D: lambda layer: (TZeroPadding2DLayer, [layer.padding]),
@@ -74,7 +74,7 @@ class KerasModelGraph(ModelGraph):
                                             layer.gamma.numpy(),
                                             layer.beta.numpy(),
                                             layer.epsilon]),
-        Conv1D: lambda layer: (TConv1DLayer, [KerasModelGraph.__convert_activation(layer.activation),
+        Conv1D: lambda layer: (TConv1DLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
                                               KerasModelGraph.__transpose(layer.kernel.numpy()),
                                               layer.kernel_size,
                                               layer.strides,
@@ -83,7 +83,7 @@ class KerasModelGraph(ModelGraph):
                                               layer.bias.numpy(),
                                               layer.groups,
                                               layer.padding]),
-        Conv2D: lambda layer: (TConv2DLayer, [KerasModelGraph.__convert_activation(layer.activation),
+        Conv2D: lambda layer: (TConv2DLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
                                               KerasModelGraph.__transpose(layer.kernel.numpy()),
                                               layer.kernel_size,
                                               layer.strides,
@@ -97,14 +97,20 @@ class KerasModelGraph(ModelGraph):
         MaxPooling2D: lambda layer: (TMaxPooling2DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
         AveragePooling1D: lambda layer: (TAvgPooling1DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
         AveragePooling2D: lambda layer: (TAvgPooling2DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
-        Activation: lambda layer: (TActivationLayer, [KerasModelGraph.__convert_activation(layer.activation)]),
+        Activation: lambda layer: (TActivationLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation]]),
         Add: lambda _: (TAddLayer, []),
         Flatten: lambda _: (TFlattenLayer, []),
-        Dense: lambda layer: (TDenseLayer, [KerasModelGraph.__convert_activation(layer.activation),
+        Dense: lambda layer: (TDenseLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
                                             KerasModelGraph.__transpose(layer.kernel.numpy()),
                                             layer.units,
                                             layer.use_bias,
                                             layer.bias.numpy()]),
+    }
+
+    ACTIVATION_MAPPING: ClassVar[dict[Callable[[tf.Tensor], tf.Tensor], TActivation]] = {
+        relu: TActivation.RELU,
+        softmax: TActivation.SOFTMAX,
+        linear: TActivation.LINEAR,
     }
 
     def __init__(self, model: Model) -> None:
@@ -182,7 +188,3 @@ class KerasModelGraph(ModelGraph):
         if len(weights.shape) == 2: # noqa: PLR2004
             return weights.swapaxes(0, 1)
         raise NotImplementedError
-
-    @classmethod
-    def __convert_activation(cls, act: Callable[..., tf.Tensor]) -> TActivation:
-        return TActivation([relu, softmax, linear].index(act))
