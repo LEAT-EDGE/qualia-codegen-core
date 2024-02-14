@@ -51,6 +51,8 @@ static inline void {{ node.layer.name }}(
 #elif defined(ACTIVATION_RELU)
         max = 0;
         x = 0;
+#else
+#error "Unsupported activation function"
 #endif
         for (y = 0; y < POOL_SIZE_Y; y++) {
           for (; x < POOL_SIZE_X; x++) {

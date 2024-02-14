@@ -47,6 +47,8 @@ static inline void {{ node.layer.name }}(
       if (tmp < 0) {
         tmp = 0;
       }
+#elif !defined(ACTIVATION_LINEAR)
+#error "Unsupported activation function"
 #endif
       avg = tmp / POOL_SIZE;
 

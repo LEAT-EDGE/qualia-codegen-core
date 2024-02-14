@@ -49,6 +49,8 @@ static inline void {{ node.layer.name }}(
 #elif defined(ACTIVATION_RELU)
       max[k] = 0;
       x = 0;
+#else
+#error "Unsupported activation function"
 #endif
     }
 

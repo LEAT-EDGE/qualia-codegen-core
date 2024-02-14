@@ -53,6 +53,8 @@ static inline void {{ node.layer.name }}(
     } else {
       o[x] = scale_and_clamp_to(NUMBER_T, output_acc, ACC_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     }
+#else
+#error "Unsupported activation function"
 #endif
   }
 }

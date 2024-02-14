@@ -71,6 +71,8 @@ static inline void {{ node.layer.name }}(
 #endif
       output[k] = scale_and_clamp_to(NUMBER_T, output_acc, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
     }
+#else
+#error "Unsupported activation function"
 #endif
   }
 #else
@@ -102,6 +104,8 @@ static inline void {{ node.layer.name }}(
 #elif defined(WITH_NMSIS_NN)
   riscv_relu_q7((q7_t*)output, FC_UNITS);
 #endif
+#elif !defined(ACTIVATION_LINEAR)
+#error "Unsupported activation with CMSIS-NN"
 #endif
 
 {% elif qtype2ctype(node.q.number_type, node.q.width) == 'int16_t' %}
@@ -126,6 +130,8 @@ static inline void {{ node.layer.name }}(
 #elif defined(WITH_NMSIS_NN)
   riscv_relu_q15((q15_t*)output, FC_UNITS);
 #endif
+#elif !defined(ACTIVATION_LINEAR)
+#error "Unsupported activation with CMSIS-NN"
 #endif
 
 {% else %}
