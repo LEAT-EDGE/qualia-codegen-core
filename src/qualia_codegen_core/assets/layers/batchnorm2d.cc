@@ -62,9 +62,9 @@ static inline void {{ node.layer.name }}(
 #endif
           output[y][x][z] = scale_and_clamp_to(NUMBER_T, tmp, INPUT_SCALE_FACTOR + TMP_SCALE_FACTOR - OUTPUT_SCALE_FACTOR, OUTPUT_ROUND_MODE);
         }
-#endif
 #else
 #error "Unsupported activation function"
+#endif
       }
     }
   }
