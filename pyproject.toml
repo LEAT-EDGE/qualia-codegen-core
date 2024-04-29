@@ -19,7 +19,7 @@ classifiers = [
 dependencies = [
     'numpy',
     'jinja2',
-    'typing_extensions',
+    'typing_extensions; python_version < "3.12"',
 ]
 dynamic = ["version"]
 
