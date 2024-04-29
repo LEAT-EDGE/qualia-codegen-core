@@ -28,7 +28,7 @@ homepage = "https://github.com/LEAT-EDGE/qualia-codegen-core"
 documentation = "https://leat-edge.github.io/qualia-codegen-core"
 
 [project.optional-dependencies]
-tensorflow = ['tensorflow >= 2.6.0, < 2.16.0', 'keras >= 2.6.0, < 3.0.0']
+tensorflow = ['tensorflow>=2.6.0', 'keras >= 2.6.0, < 3.0.0']
 pytorch = ['torch>=1.8.0', 'tabulate']
 graph = ['graphviz']
 tests = ['pytest', 'pytest-xdist']
