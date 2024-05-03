@@ -7,6 +7,7 @@ default:
     - pacman -Syu --noconfirm --needed python-pytorch python-tensorflow python-pip python-numpy python-jinja python-graphviz
     - pacman -S --noconfirm --needed python-pytest python-pytest-dependency python-pytest-xdist python-pytest-env
     - pacman -S --noconfirm --needed python-ruff mypy git
+    - pip install --break-system-packages -U keras
 
 stages:          # List of stages for jobs, and their order of execution
   - check
@@ -43,7 +44,8 @@ doc-job:
   before_script:
     - pacman -Syu --noconfirm --needed rclone make git
     - pacman -S --noconfirm --needed python-sphinx python-sphinx-autodoc-typehints python-sphinx_rtd_theme python-myst-parser
-    - pacman -S --noconfirm --needed python-pdm python-numpy python-keras python-pytorch
+    - pacman -S --noconfirm --needed python-pdm python-numpy python-pytorch python-tensorflow
+    - pip install --break-system-packages -U keras
   script:
     - make -C docs html
     - read RCLONE_SFTP_PASS < <(rclone obscure - < ${GITLAB_LDAP_PASSWORD}) && export RCLONE_SFTP_PASS
