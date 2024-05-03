@@ -120,11 +120,11 @@ class ModelGraph:
 
         innodes = self.get_nodes_for_layers(inlayers)
         if not self.no_none_in_nodes(innodes):
-            logger.error('Input node for layer not found')
+            logger.error('Input node for layer %s not found', layer.name)
             return
         outnodes = self.get_nodes_for_layers(outlayers)
         if not self.no_none_in_nodes(outnodes):
-            logger.error('Output node for layer not found')
+            logger.error('Output node for layer %s not found', layer.name)
             return
 
         self.add_node(LayerNode(layer), innodes, outnodes)

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import importlib.util
 import logging
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, cast
 
 from keras.activations import linear, relu, softmax  # type: ignore[import-untyped] # No stubs for keras package
 from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras package
@@ -47,11 +48,20 @@ from .layers.TActivationLayer import TActivation
 from .ModelGraph import ModelGraph
 
 try:
-    # Keras >= 2.13.1
-    from keras.src.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
+    # Keras 3.x
+    from keras.layers import InputLayer
 except ImportError:
-    # Keras < 2.13.0
-    from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
+    try:
+        # Keras >= 2.13.1
+        from keras.src.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
+    except ImportError:
+        # Keras < 2.13.0
+        from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
+
+if importlib.util.find_spec('keras.src.ops.node'): # Keras 3.x
+    from keras.src.ops.node import Node  # type: ignore[import-untyped]
+else:
+    from keras.src.engine.node import Node  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     import numpy.typing
@@ -66,7 +76,7 @@ class KerasModelGraph(ModelGraph):
         InputLayer: lambda _: (TInputLayer, []),
         ZeroPadding1D: lambda layer: (TZeroPadding1DLayer, [layer.padding]),
         ZeroPadding2D: lambda layer: (TZeroPadding2DLayer, [layer.padding]),
-        BatchNormalization: lambda layer: (TBatchNormalization1DLayer if len(layer.input_shape) == 3 # noqa: PLR2004
+        BatchNormalization: lambda layer: (TBatchNormalization1DLayer if len(KerasModelGraph.__get_input_shape(layer)) == 3  # noqa: PLR2004
                                            else TBatchNormalization2DLayer,
                                            [TActivation.LINEAR,
                                             layer.moving_mean.numpy(),
@@ -152,8 +162,8 @@ class KerasModelGraph(ModelGraph):
         if existing is not None:
             return existing
 
-        args = [self.__convert_shapes(layer.input_shape),
-                self.__convert_shapes(layer.output_shape),
+        args = [self.__convert_shapes(self.__get_input_shape(layer)),
+                self.__convert_shapes(self.__get_output_shape(layer)),
                 self.__convert_dtypes(layer.dtype),
                 layer.name]
 
@@ -170,12 +180,19 @@ class KerasModelGraph(ModelGraph):
 
     def __get_layer_input_layers(self, layer: Layer) -> Literal[False] | list[Layer]:
         inlayers = []
-        for n in layer.inbound_nodes:
-            for inb in n.iterate_inbound():
-                inlayer = self.__convert(inb[0])
+        for n in self.__get_inbound_nodes(layer):
+            # Keras 3.x compatibility
+            if hasattr(n, 'operation'):
+                inlayer = self.__convert(n.operation)
                 if inlayer is False:
                     return False
                 inlayers.append(inlayer)
+            else:
+                for inb in n.iterate_inbound():
+                    inlayer = self.__convert(inb[0])
+                    if inlayer is False:
+                        return False
+                    inlayers.append(inlayer)
         return inlayers
 
     @classmethod
@@ -188,3 +205,30 @@ class KerasModelGraph(ModelGraph):
         if len(weights.shape) == 2: # noqa: PLR2004
             return weights.swapaxes(0, 1)
         raise NotImplementedError
+
+    @classmethod
+    def __get_input_shape(cls, layer: Layer) -> tuple[int, ...]:
+        # Keras 3.x compatibility
+        if hasattr(layer, 'get_build_config'):
+            if isinstance(layer, InputLayer): # get_build_config() returns None for InputLayer
+                return cast(tuple[int, ...], layer.batch_shape)
+            return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
+        return cast(tuple[int, ...], layer.input_shape)
+
+    @classmethod
+    def __get_output_shape(cls, layer: Layer) -> tuple[int, ...]:
+        # Keras 3.x compatibility
+        if hasattr(layer, 'compute_output_shape'):
+            if isinstance(layer, InputLayer): # compute_output_shape not implemented for InputLayer
+                return cast(tuple[int, ...], layer.batch_shape)
+
+            return cast(tuple[int, ...], layer.compute_output_shape(cls.__get_input_shape(layer)))
+
+        return cast(tuple[int, ...], layer.output_shape)
+
+    @classmethod
+    def __get_inbound_nodes(cls, layer: Layer) -> list[Node]:
+        if hasattr(layer, 'inbound_nodes'):
+            return cast(list[Node], layer.inbound_nodes)
+        # Keras 3.x compatibility, no public API
+        return [n for inbound_node in layer._inbound_nodes for n in inbound_node.parent_nodes]  # noqa: SLF001
