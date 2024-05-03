@@ -204,14 +204,14 @@ class Converter:
         return self.combine_relu(modelgraph_combined_zeropadding)
 
     def preprocess_modelgraph(self, modelgraph: ModelGraph) -> ModelGraph | None:
-        logger.info('ModelGraph: %s', modelgraph)
+        logger.info('ModelGraph:\n%s', modelgraph)
 
         optimized_modelgraph = self.optimize_modelgraph(modelgraph)
         if optimized_modelgraph is None:
             logger.error('Could not optimize ModelGraph')
             return None
 
-        logger.info('ModelGraph after optimization: %s', optimized_modelgraph)
+        logger.info('ModelGraph after optimization:\n%s', optimized_modelgraph)
         graphviz = optimized_modelgraph.graphviz()
         if graphviz:
             logger.info('Graphviz: %s', graphviz)
