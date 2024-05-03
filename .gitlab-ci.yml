@@ -44,7 +44,7 @@ doc-job:
   before_script:
     - pacman -Syu --noconfirm --needed rclone make git
     - pacman -S --noconfirm --needed python-sphinx python-sphinx-autodoc-typehints python-sphinx_rtd_theme python-myst-parser
-    - pacman -S --noconfirm --needed python-pdm python-numpy python-pytorch python-tensorflow
+    - pacman -S --noconfirm --needed python-pdm python-numpy python-pytorch python-tensorflow python-pip
     - pip install --break-system-packages -U keras
   script:
     - make -C docs html
