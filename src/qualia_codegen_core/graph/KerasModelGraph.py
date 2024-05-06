@@ -214,12 +214,10 @@ class KerasModelGraph(ModelGraph):
     @classmethod
     def __get_output_shape(cls, layer: Layer) -> tuple[int, ...]:
         # Keras 3.x compatibility
-        if hasattr(layer, 'compute_output_shape'):
+        if not hasattr(layer, 'output_shape'):
             if isinstance(layer, InputLayer): # compute_output_shape not implemented for InputLayer
                 return cast(tuple[int, ...], layer.batch_shape)
-
             return cast(tuple[int, ...], layer.compute_output_shape(cls.__get_input_shape(layer)))
-
         return cast(tuple[int, ...], layer.output_shape)
 
     @classmethod
