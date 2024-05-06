@@ -205,7 +205,7 @@ class KerasModelGraph(ModelGraph):
     @classmethod
     def __get_input_shape(cls, layer: Layer) -> tuple[int, ...]:
         # Keras 3.x compatibility
-        if hasattr(layer, 'get_build_config'):
+        if not hasattr(layer, 'input_shape'):
             if isinstance(layer, InputLayer): # get_build_config() returns None for InputLayer
                 return cast(tuple[int, ...], layer.batch_shape)
             return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
