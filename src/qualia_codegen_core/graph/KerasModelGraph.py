@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib.util
 import logging
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, cast
 
@@ -50,6 +49,7 @@ from .ModelGraph import ModelGraph
 try:
     # Keras 3.x
     from keras.layers import InputLayer
+    from keras.src.ops.node import Node  # type: ignore[import-untyped]
 except ImportError:
     try:
         # Keras >= 2.13.1
@@ -57,10 +57,6 @@ except ImportError:
     except ImportError:
         # Keras < 2.13.0
         from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
-
-if importlib.util.find_spec('keras.src.ops.node'): # Keras 3.x
-    from keras.src.ops.node import Node  # type: ignore[import-untyped]
-else:
     from keras.src.engine.node import Node  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
