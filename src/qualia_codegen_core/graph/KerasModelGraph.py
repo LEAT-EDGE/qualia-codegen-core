@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, cast
 
@@ -68,11 +69,11 @@ logger = logging.getLogger(__name__)
 
 
 class KerasModelGraph(ModelGraph):
-    MAPPING: ClassVar[dict[type[Layer], Callable[[Layer], tuple[type[TBaseLayer], list[Any]]]]] = {
-        InputLayer: lambda _: (TInputLayer, []),
-        ZeroPadding1D: lambda layer: (TZeroPadding1DLayer, [layer.padding]),
-        ZeroPadding2D: lambda layer: (TZeroPadding2DLayer, [layer.padding]),
-        BatchNormalization: lambda layer: (TBatchNormalization1DLayer if len(KerasModelGraph.__get_input_shape(layer)) == 3  # noqa: PLR2004
+    MAPPING: ClassVar[dict[type[Layer], Callable[[Layer, TBaseLayer], tuple[type[TBaseLayer], list[Any]]]]] = {
+        InputLayer: lambda *_: (TInputLayer, []),
+        ZeroPadding1D: lambda layer, _: (TZeroPadding1DLayer, [layer.padding]),
+        ZeroPadding2D: lambda layer, _: (TZeroPadding2DLayer, [layer.padding]),
+        BatchNormalization: lambda layer, _: (TBatchNormalization1DLayer if len(KerasModelGraph.__get_input_shape(layer)) == 3  # noqa: PLR2004
                                            else TBatchNormalization2DLayer,
                                            [TActivation.LINEAR,
                                             layer.moving_mean.numpy(),
@@ -80,7 +81,7 @@ class KerasModelGraph(ModelGraph):
                                             layer.gamma.numpy(),
                                             layer.beta.numpy(),
                                             layer.epsilon]),
-        Conv1D: lambda layer: (TConv1DLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
+        Conv1D: lambda layer, args: (TConv1DLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
                                               KerasModelGraph.__transpose(layer.kernel.numpy()),
                                               layer.kernel_size,
                                               layer.strides,
@@ -88,8 +89,11 @@ class KerasModelGraph(ModelGraph):
                                               layer.use_bias,
                                               layer.bias.numpy(),
                                               layer.groups,
-                                              layer.padding]),
-        Conv2D: lambda layer: (TConv2DLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
+                                              KerasModelGraph.__compute_padding1d(layer.padding,
+                                                                                  layer.kernel_size,
+                                                                                  layer.strides,
+                                                                                  args.input_shape)]),
+        Conv2D: lambda layer, args: (TConv2DLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
                                               KerasModelGraph.__transpose(layer.kernel.numpy()),
                                               layer.kernel_size,
                                               layer.strides,
@@ -97,16 +101,19 @@ class KerasModelGraph(ModelGraph):
                                               layer.use_bias,
                                               layer.bias.numpy(),
                                               layer.groups,
-                                              layer.padding]),
-        Dropout: lambda layer: (TDropoutLayer, [layer.rate]),
-        MaxPooling1D: lambda layer: (TMaxPooling1DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
-        MaxPooling2D: lambda layer: (TMaxPooling2DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
-        AveragePooling1D: lambda layer: (TAvgPooling1DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
-        AveragePooling2D: lambda layer: (TAvgPooling2DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
-        Activation: lambda layer: (TActivationLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation]]),
-        Add: lambda _: (TAddLayer, []),
-        Flatten: lambda _: (TFlattenLayer, []),
-        Dense: lambda layer: (TDenseLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
+                                              KerasModelGraph.__compute_padding2d(layer.padding,
+                                                                                  layer.kernel_size,
+                                                                                  layer.strides,
+                                                                                  args.input_shape)]),
+        Dropout: lambda layer, _: (TDropoutLayer, [layer.rate]),
+        MaxPooling1D: lambda layer, _: (TMaxPooling1DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
+        MaxPooling2D: lambda layer, _: (TMaxPooling2DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
+        AveragePooling1D: lambda layer, _: (TAvgPooling1DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
+        AveragePooling2D: lambda layer, _: (TAvgPooling2DLayer, [TActivation.LINEAR, layer.pool_size, layer.strides]),
+        Activation: lambda layer, _: (TActivationLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation]]),
+        Add: lambda *_: (TAddLayer, []),
+        Flatten: lambda *_: (TFlattenLayer, []),
+        Dense: lambda layer, _: (TDenseLayer, [KerasModelGraph.ACTIVATION_MAPPING[layer.activation],
                                             KerasModelGraph.__transpose(layer.kernel.numpy()),
                                             layer.units,
                                             layer.use_bias,
@@ -158,10 +165,11 @@ class KerasModelGraph(ModelGraph):
         if existing is not None:
             return existing
 
-        args = [self.__convert_shapes(self.__get_input_shape(layer)),
-                self.__convert_shapes(self.__get_output_shape(layer)),
-                self.__convert_dtypes(layer.dtype),
-                layer.name]
+        # Not the final layer type, just used to collect the common args
+        args = TBaseLayer(input_shape=self.__convert_shapes(self.__get_input_shape(layer)),
+                output_shape=self.__convert_shapes(self.__get_output_shape(layer)),
+                output_dtype=self.__convert_dtypes(layer.dtype),
+                name=layer.name)
 
         options = KerasModelGraph.MAPPING.get(type(layer), None)
 
@@ -169,9 +177,9 @@ class KerasModelGraph(ModelGraph):
             logger.error('Unsupported Keras layer type: %s', type(layer))
             return False
 
-        cls, params = options(layer)
+        cls, params = options(layer, args)
 
-        self.__layer_cache[layer] = res = cls(*args, *params)
+        self.__layer_cache[layer] = res = cls(*dataclasses.astuple(args), *params)
         return res
 
     def __get_layer_input_layers(self, layer: Layer) -> Literal[False] | list[Layer]:
@@ -201,6 +209,50 @@ class KerasModelGraph(ModelGraph):
         if len(weights.shape) == 2: # noqa: PLR2004
             return weights.swapaxes(0, 1)
         raise NotImplementedError
+
+    @classmethod
+    def __compute_padding1d(cls,
+                            padding: str,
+                            kernel_size: tuple[int],
+                            strides: tuple[int],
+                            input_shape: Shapes) -> tuple[int, int]:
+        if padding == 'valid':
+            return (0, 0)
+
+        if padding == 'same':
+            # Inspired from tensorflow/core/framework/kernel_shape_util.cc:GetWindowedOutputSizeVerbose()
+            output_size = (input_shape[0][-2] + strides[0] - 1) // strides[0]
+            padding_needed = max(0, (output_size - 1) * strides[0] + kernel_size[0] - input_shape[0][-2])
+            padding_before = padding_needed // 2
+            padding_after = padding_needed - padding_before
+            return (padding_before, padding_after)
+
+        logger.error('Unsupported padding mode %s', padding)
+        raise ValueError
+
+    @classmethod
+    def __compute_padding2d(cls,
+                            padding: str,
+                            kernel_size: tuple[int, int],
+                            strides: tuple[int, int],
+                            input_shape: Shapes) -> tuple[tuple[int, int], tuple[int, int]]:
+        if padding == 'valid':
+            return ((0, 0), (0, 0))
+
+        if padding == 'same':
+            # Inspired from tensorflow/core/framework/kernel_shape_util.cc:GetWindowedOutputSizeVerbose()
+            output_size_x = (input_shape[0][-2] + strides[1] - 1) // strides[1]
+            output_size_y = (input_shape[0][-3] + strides[0] - 1) // strides[0]
+            padding_x_needed = max(0, (output_size_x - 1) * strides[1] + kernel_size[1] - input_shape[0][-2])
+            padding_y_needed = max(0, (output_size_y - 1) * strides[0] + kernel_size[0] - input_shape[0][-3])
+            padding_x_before = padding_x_needed // 2
+            padding_y_before = padding_y_needed // 2
+            padding_x_after = padding_x_needed - padding_x_before
+            padding_y_after = padding_y_needed - padding_y_before
+            return ((padding_y_before, padding_y_after), (padding_x_before, padding_x_after))
+
+        logger.error('Unsupported padding mode %s', padding)
+        raise ValueError
 
     @classmethod
     def __get_input_shape(cls, layer: Layer) -> tuple[int, ...]:

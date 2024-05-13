@@ -5,4 +5,4 @@ from .TConvLayer import TConvLayer
 
 @dataclass
 class TConv1DLayer(TConvLayer):
-    padding: tuple[int]
+    padding: tuple[int, int]

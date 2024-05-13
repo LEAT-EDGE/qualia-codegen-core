@@ -21,8 +21,8 @@ else:
 class TConvLayer(TBaseLayer):
     activation: TActivation
     kernel: NDArrayFloatOrInt
-    kernel_size: tuple[int]
-    strides: tuple[int]
+    kernel_size: tuple[int, ...]
+    strides: tuple[int, ...]
     filters: int
     use_bias: bool
     bias: NDArrayFloatOrInt
