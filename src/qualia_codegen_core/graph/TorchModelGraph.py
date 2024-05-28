@@ -288,7 +288,7 @@ class TorchModelGraph(ModelGraph):
     def __generate_dummy_inputs(self, shapes: Shapes,
                                 dtypes: DTypes) -> tuple[Tensor, ...]:
         def generate_input(shape: Shape, dtype: numpy.typing.DTypeLike) -> Tensor:
-            return torch.from_numpy(np.zeros((1,
+            return torch.from_numpy(np.zeros((shape[0],
                                               *self.__shape_channels_last_to_first(Shape(shape[1:]))),
                                              dtype=dtype))
         return tuple(generate_input(shape, dtype) for shape, dtype in zip(shapes, dtypes))
