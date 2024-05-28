@@ -384,8 +384,9 @@ class TorchModelGraph(ModelGraph):
         # kwargs are the methods's keyword arguments
         method_kwargs = self.__load_arg(layer.kwargs)
         method = getattr(self_obj, layer.target)
-        dummy_outputs = method(*method_args, **method_kwargs)
-        self.__layer_outputs[layer.name] = dummy_outputs
+        module_outputs = method(*method_args, **method_kwargs)
+        self.__layer_outputs[layer.name] = module_outputs
+        dummy_outputs = (module_outputs,) if isinstance(module_outputs, Tensor) else tuple(module_outputs)
 
         if not hasattr(self_obj, 'shape') or not isinstance(self_obj.shape, tuple):
             logger.error('No or invalid input_shape found for %s', layer.target)
