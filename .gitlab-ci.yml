@@ -4,6 +4,7 @@ variables:
 default:
   image: archlinux:latest
   before_script:
+    - pacman-key --init
     - pacman -Syu --noconfirm --needed python-pytorch python-tensorflow python-pip python-numpy python-jinja python-graphviz
     - pacman -S --noconfirm --needed python-pytest python-pytest-dependency python-pytest-xdist python-pytest-env
     - pacman -S --noconfirm --needed python-ruff mypy git
