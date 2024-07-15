@@ -229,7 +229,7 @@ class Converter:
                 return False
 
             # Apply weights quantization for each layer with fixed point and weights
-            if node.q.number_type == int and hasattr(node.layer, 'weights'):
+            if node.q.number_type is int and hasattr(node.layer, 'weights'):
                 quantizer = Quantizer(width=node.q.width)
                 if not quantizer.quantize_weights(node):
                     logger.error('Weights quantization failed for "%s"', node.layer.name)

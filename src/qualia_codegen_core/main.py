@@ -70,7 +70,7 @@ def annotate_quantization(
         width: int,
         long_width: int) -> bool:
 
-    if number_type == int: # Activation range only when using fixed-point quantization
+    if number_type is int: # Activation range only when using fixed-point quantization
         if not activations_range:
             logger.error('No activations range data available, required for fixed-point quantization')
             return False

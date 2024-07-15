@@ -28,9 +28,9 @@ class DataConverter:
             }
 
     def qtype2ctype(self, number_type: type[int |float], width: int) -> str:
-        if number_type == int:
+        if number_type is int:
             return f'{number_type.__name__}{width}_t'
-        if number_type == float:
+        if number_type is float:
             return number_type.__name__
         raise NotImplementedError
 
