@@ -29,6 +29,8 @@ deploy-job:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   before_script:
+    - pacman-key --init
+    - pacman -Sy --noconfirm archlinux-keyring
     - pacman -Syu --noconfirm --needed python-build python-pkginfo python-py python-pyproject-hooks python-packaging
     - pacman -S --noconfirm --needed python-setuptools python-pyparsing python-pluggy python-platformdirs python-requests
     - pacman -S --noconfirm --needed python-pip git
@@ -44,6 +46,8 @@ doc-job:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   before_script:
+    - pacman-key --init
+    - pacman -Sy --noconfirm archlinux-keyring
     - pacman -Syu --noconfirm --needed rclone make git
     - pacman -S --noconfirm --needed python-sphinx python-sphinx-autodoc-typehints python-sphinx_rtd_theme python-myst-parser
     - pacman -S --noconfirm --needed python-pdm python-numpy python-pytorch python-tensorflow python-pip
