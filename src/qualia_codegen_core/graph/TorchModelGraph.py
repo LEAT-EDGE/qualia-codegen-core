@@ -315,7 +315,7 @@ class TorchModelGraph(ModelGraph):
             return DTypes(res)
         return False
 
-    def _convert_placeholder(self) -> TBaseLayer | None:
+    def _convert_placeholder(self, layer: Node) -> TBaseLayer | None:
         if not hasattr(self._model, 'input_shape') or not isinstance(self._model.input_shape, tuple):
             logger.error('Model must have input_shape attribute')
             return None
@@ -324,8 +324,14 @@ class TorchModelGraph(ModelGraph):
         # Prepend dummy dimension
         shp = Shape((1, *shp))
 
+        inputs_shape = Shapes((shp,))
         # Assume input is single-precision floating-point # WIP it could change
-        return TInputLayer(Shapes((shp,)), Shapes((shp,)), DTypes((np.float32,)), 'input')
+        inputs_dtype = DTypes((np.float32,))
+        dummy_inputs = self.__generate_dummy_inputs(inputs_shape, inputs_dtype)
+        # Only one input
+        self.__layer_outputs[layer.name] = dummy_inputs[0]
+
+        return TInputLayer(inputs_shape, inputs_shape, inputs_dtype, 'input')
 
     def _convert_call_module(self, layer: Node) -> Literal[False] | TBaseLayer | None:
         module = self.__modules[layer.target]
@@ -494,7 +500,7 @@ class TorchModelGraph(ModelGraph):
         if op == 'output':
             return None # No layer to generate
         if op == 'placeholder':
-            res = self._convert_placeholder()
+            res = self._convert_placeholder(layer)
         elif op == 'call_module':
             res = self._convert_call_module(layer)
             if res is None: # In case __convert_call_module ended up on 'output' op
