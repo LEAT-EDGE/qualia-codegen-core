@@ -154,6 +154,10 @@ class TorchModelGraph(ModelGraph):
         'sum': lambda dim: (TSumLayer, [TorchModelGraph.array_or_scalar(dim)]),
     }
 
+    METHOD_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any] | str, tuple[int, ...]]] = {
+        'sum': (0,),
+    }
+
     FUNCTION_MAPPING: ClassVar[dict[Callable[..., Any], Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
         operator.add: lambda *_: (TAddLayer, []),
         adaptive_avg_pool2d: lambda x, output_size: (TAvgPooling2DLayer,
@@ -526,6 +530,10 @@ class TorchModelGraph(ModelGraph):
         # Special handling for functions where not all args should be considered as input, i.e., a node in the graph
         if layer.op == 'call_function':
             args = tuple(args[i] for i in self.FUNCTION_INPUT_ARG_INDEX[layer.target])
+
+        # Special handling for methods where not all args should be considered as input, i.e., a node in the graph
+        if layer.op == 'call_method':
+            args = tuple(args[i] for i in self.METHOD_INPUT_ARG_INDEX[layer.target])
 
         for x in args:
             if not self.__is_iterablenode_recursive(x): # Input arg to a Node should be a Node or Iterable of Node
