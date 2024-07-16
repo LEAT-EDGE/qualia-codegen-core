@@ -46,6 +46,7 @@ class Converter:
         layers.TBatchNormalization1DLayer: 'batchnorm1d',
         layers.TBatchNormalization2DLayer: 'batchnorm2d',
         layers.TInputLayer: None,  # Nothing to generate for input layer
+        layers.TPermuteLayer: 'permute',
 
         # Custom Qualia layers
         layers.TAddLayer: 'add',

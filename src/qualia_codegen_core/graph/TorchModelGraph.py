@@ -53,6 +53,7 @@ from .layers import (
     TInputLayer,
     TMaxPooling1DLayer,
     TMaxPooling2DLayer,
+    TPermuteLayer,
     TSumLayer,
 )
 from .layers.TActivationLayer import TActivation
@@ -152,10 +153,12 @@ class TorchModelGraph(ModelGraph):
 
     METHOD_MAPPING: ClassVar[dict[str, Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
         'sum': lambda dim: (TSumLayer, [TorchModelGraph.array_or_scalar(dim)]),
+        'permute': lambda *dims: (TPermuteLayer, [dims]),
     }
 
     METHOD_INPUT_ARG_INDEX: ClassVar[dict[Callable[..., Any] | str, tuple[int, ...]]] = {
         'sum': (0,),
+        'permute': (0,),
     }
 
     FUNCTION_MAPPING: ClassVar[dict[Callable[..., Any], Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
@@ -384,7 +387,7 @@ class TorchModelGraph(ModelGraph):
         layercls, opts = options(module, args)
         return layercls(*dataclasses.astuple(args), *opts) # args and opts must be specified in the correct order
 
-    def _convert_call_method(self, layer: Node) -> TBaseLayer | None:
+    def _convert_call_method(self, layer: Node) -> TBaseLayer | None:  # noqa: PLR0911
         if not isinstance(layer.target, str):
             logger.error('Method target type should be str, got: %s', type(layer.target))
             return None

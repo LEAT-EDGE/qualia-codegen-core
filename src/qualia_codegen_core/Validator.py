@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from qualia_codegen_core.graph.RoundMode import RoundMode
 from qualia_codegen_core.typing import TYPE_CHECKING
 
-from .graph.layers import TActivationLayer, TBaseLayer, TBatchNormalizationLayer, TFlattenLayer, TSumLayer
+from .graph.layers import TActivationLayer, TBaseLayer, TBatchNormalizationLayer, TFlattenLayer, TPermuteLayer, TSumLayer
 from .graph.layers.TActivationLayer import TActivation
 
 if TYPE_CHECKING:
@@ -115,6 +115,21 @@ class Validator:
             return False
         return True
 
+    def validate_permute(self, node: LayerNode) -> bool:
+        """Check that the batch dimension (index 0) is not permuted with the permute operation.
+
+        :param node: LayerNode with a :class:`qualia_codegen_core.graph.layers.TPermuteLayer` ``layer``
+        :return: ``False`` if the batch dimension is permuted in a :class:`qualia_codegen_core.graph.layers.TPermuteLayer`,
+                 otherwise ``True``
+        """
+        if not isinstance(node.layer, TPermuteLayer):  # Not BatchNorm, ignore
+            return True
+
+        if node.layer.dims[0] != 0:
+            logger.error('Permuting batch dimension in %s is not supported since batched inference is not supported',
+                         node.layer.name)
+            return False
+        return True
 
     def validate_node(self, node: LayerNode) -> bool:
         valid = True
@@ -124,4 +139,5 @@ class Validator:
         valid = valid and self.validate_batchnorm(node)
         valid = valid and self.validate_flatten(node)
         valid = valid and self.validate_global_sum_pooling(node)
-        return valid and self.validate_round_mode(node)
+        valid = valid and self.validate_round_mode(node)
+        return valid and self.validate_permute(node)
