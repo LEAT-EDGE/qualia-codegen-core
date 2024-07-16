@@ -398,11 +398,19 @@ class TorchModelGraph(ModelGraph):
         self.__layer_outputs[layer.name] = module_outputs
         dummy_outputs = (module_outputs,) if isinstance(module_outputs, Tensor) else tuple(module_outputs)
 
+
         if not hasattr(self_obj, 'shape') or not isinstance(self_obj.shape, tuple):
             logger.error('No or invalid input_shape found for %s', layer.target)
             return None
 
-        inputs_shape = Shapes((Shape(self_obj.shape),))
+        # Extract shape from first argument which should be the previous layer's Node since the method applies to its output Tensor
+        if not isinstance(layer.args[0], Node):
+            logger.error('Method "%s" does not apply on the output of a Node, got: %s', layer.target, type(layer.args[0]))
+            return None
+        inputs_shape = self.__get_layer_output_shapes(layer.args[0])
+        if inputs_shape is False:
+            logger.error('Could not get input shapes for "%s"', layer.target)
+            return None
 
         outputs_shape = self.__get_tensor_output_shapes(dummy_outputs)
 
