@@ -199,7 +199,7 @@ class TorchModelGraph(ModelGraph):
 
         self._model = model
         self.__layer_cache: dict[Node, TBaseLayer] = {}
-        self.__layer_outputs: dict[str, Tensor] = {}
+        self._layer_outputs: dict[str, Tensor] = {}
         self.__modules = dict(model.named_modules())
         self.__module_mapping: dict[type[Module], Callable[[Module, TBaseLayer], tuple[type[TBaseLayer], list[Any]]]] = {}
 
@@ -257,7 +257,7 @@ class TorchModelGraph(ModelGraph):
         return (obj, )
 
     def __load_arg(self, a: Argument) -> Any: # noqa: ANN401 we have no knowledge about the arg types
-        return fx.node.map_arg(a, lambda n: self.__layer_outputs[n.name])
+        return fx.node.map_arg(a, lambda n: self._layer_outputs[n.name])
 
     def __get_layer_output_shapes(self, args: IterableNode) -> Literal[False] | Shapes:
         def concat(x: Literal[False] | Shapes,
@@ -292,7 +292,7 @@ class TorchModelGraph(ModelGraph):
             return False
         return DTypes(layer.output_dtype)
 
-    def __generate_dummy_inputs(self, shapes: Shapes,
+    def _generate_dummy_inputs(self, shapes: Shapes,
                                 dtypes: DTypes) -> tuple[Tensor, ...]:
         def generate_input(shape: Shape, dtype: numpy.typing.DTypeLike) -> Tensor:
             return torch.from_numpy(np.zeros((shape[0],
@@ -334,9 +334,9 @@ class TorchModelGraph(ModelGraph):
         inputs_shape = Shapes((shp,))
         # Assume input is single-precision floating-point # WIP it could change
         inputs_dtype = DTypes((np.float32,))
-        dummy_inputs = self.__generate_dummy_inputs(inputs_shape, inputs_dtype)
+        dummy_inputs = self._generate_dummy_inputs(inputs_shape, inputs_dtype)
         # Only one input
-        self.__layer_outputs[layer.name] = dummy_inputs[0]
+        self._layer_outputs[layer.name] = dummy_inputs[0]
 
         return TInputLayer(inputs_shape, inputs_shape, inputs_dtype, 'input')
 
@@ -359,10 +359,10 @@ class TorchModelGraph(ModelGraph):
             logger.error('Could not get input dtypes for "%s"', layer.target)
             return False
 
-        dummy_inputs = self.__generate_dummy_inputs(inputs_shape, inputs_dtype)
+        dummy_inputs = self._generate_dummy_inputs(inputs_shape, inputs_dtype)
         # Call module with original keyword arguments (for layers with parameters in forward())
         module_outputs = module(*dummy_inputs, **layer.kwargs)
-        self.__layer_outputs[layer.name] = module_outputs
+        self._layer_outputs[layer.name] = module_outputs
         dummy_outputs = (module_outputs,) if isinstance(module_outputs, Tensor) else tuple(module_outputs)
 
         outputs_shape = self.__get_tensor_output_shapes(dummy_outputs)
@@ -398,7 +398,7 @@ class TorchModelGraph(ModelGraph):
         method_kwargs = self.__load_arg(layer.kwargs)
         method = getattr(self_obj, layer.target)
         module_outputs = method(*method_args, **method_kwargs)
-        self.__layer_outputs[layer.name] = module_outputs
+        self._layer_outputs[layer.name] = module_outputs
         dummy_outputs = (module_outputs,) if isinstance(module_outputs, Tensor) else tuple(module_outputs)
 
 
@@ -448,7 +448,7 @@ class TorchModelGraph(ModelGraph):
         function_kwargs = self.__load_arg(layer.kwargs)
         function = layer.target
         function_outputs = function(*function_args, **function_kwargs)
-        self.__layer_outputs[layer.name] = function_outputs
+        self._layer_outputs[layer.name] = function_outputs
         dummy_outputs = (function_outputs,) if isinstance(function_outputs, Tensor) else tuple(function_outputs)
 
         # Extract function args which are Tensor (i.e., inputs) to get their shapes and filter out extra arguments
