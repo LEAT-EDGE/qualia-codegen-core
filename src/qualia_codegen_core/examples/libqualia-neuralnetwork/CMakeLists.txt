@@ -12,6 +12,7 @@ add_library(qualia-neuralnetwork
 target_compile_options(qualia-neuralnetwork PRIVATE
   ${LIBQUALIA_NEURALNETWORK_CFLAGS}
   "-include" "${MODEL_DIR}/include/defines.h"
+  "-fdiagnostics-color=always"
 )
 
 if(WITH_CMSIS_NN)
@@ -54,10 +55,10 @@ target_include_directories(cmsis-nn PUBLIC
 endif()
 
 target_compile_features(qualia-neuralnetwork PRIVATE
-  cxx_std_17
+  cxx_std_20
 )
 
-target_include_directories(qualia-neuralnetwork PRIVATE
+target_include_directories(qualia-neuralnetwork PUBLIC
   ${MODEL_DIR}/include
 )
 target_include_directories(qualia-neuralnetwork PUBLIC
