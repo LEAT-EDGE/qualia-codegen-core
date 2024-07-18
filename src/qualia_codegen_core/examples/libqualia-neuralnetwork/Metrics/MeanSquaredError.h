@@ -12,7 +12,7 @@ template<typename T, std::size_t N>
 class MeanSquaredError: public Metric<T, N> {
   /* Multi-variable MSE metrics */
 private:
-  double squared_error = 0.0;
+  metric_return_t squared_error = 0.0f;
   std::size_t count = 0;
 
 public:
@@ -24,14 +24,14 @@ public:
     std::array<T, N> diff{};
     std::transform(preds.begin(), preds.end(), targets.begin(), diff.begin(), std::minus<T>());
 
-    double error = std::accumulate(diff.begin(), diff.end(), 0.0);
+    metric_return_t error = std::accumulate(diff.begin(), diff.end(), 0.0f);
 
-    squared_error += error * error;
+    this->squared_error += error * error;
 
     this->count++;
   }
 
-  float compute() {
+  metric_return_t compute() {
     return this->squared_error / this->count;
   }
 };

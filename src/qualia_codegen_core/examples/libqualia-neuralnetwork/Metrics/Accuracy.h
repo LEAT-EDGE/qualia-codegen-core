@@ -27,7 +27,7 @@ public:
     this->count++;
   }
 
-  float compute() {
+  metric_return_t compute() {
     return this->valids / this->count;
   }
 };
