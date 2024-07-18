@@ -7,7 +7,8 @@ set(LIBQUALIA_NEURALNETWORK_CFLAGS
 
 add_library(qualia-neuralnetwork
   NeuralNetwork.cpp
-  ${MODEL_DIR}/model.c)
+  ${MODEL_DIR}/model.c
+  ${MODEL_DIR}/metrics.cpp)
 
 target_compile_options(qualia-neuralnetwork PRIVATE
   ${LIBQUALIA_NEURALNETWORK_CFLAGS}
