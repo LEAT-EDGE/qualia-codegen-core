@@ -11,8 +11,9 @@ logger = logging.getLogger(__name__)
 class MetricsConverter(Converter):
     metric_classes: ClassVar[dict[str, str]] = {
         'acc': 'Accuracy',
-        'mse': 'MeanSquaredError',
         'corr': 'PearsonCorrelationCoefficient',
+        'mae': 'MeanAbsoluteError',
+        'mse': 'MeanSquaredError',
     }
 
     def write_metrics_header(self, metrics: list[str]) -> str:
