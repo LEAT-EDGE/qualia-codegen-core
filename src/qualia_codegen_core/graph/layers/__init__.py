@@ -7,6 +7,7 @@ from .TBaseLayer import TBaseLayer
 from .TBatchNormalization1DLayer import TBatchNormalization1DLayer
 from .TBatchNormalization2DLayer import TBatchNormalization2DLayer
 from .TBatchNormalizationLayer import TBatchNormalizationLayer
+from .TConcatenateLayer import TConcatenateLayer
 from .TConv1DLayer import TConv1DLayer
 from .TConv2DLayer import TConv2DLayer
 from .TConvLayer import TConvLayer
@@ -34,6 +35,7 @@ layers_t = {
     'TBatchNormalization1DLayer': TBatchNormalization1DLayer,
     'TBatchNormalization2DLayer': TBatchNormalization2DLayer,
     'TBatchNormalizationLayer': TBatchNormalizationLayer,
+    'TConcatenateLayer': TConcatenateLayer,
     'TConv1DLayer': TConv1DLayer,
     'TConv2DLayer': TConv2DLayer,
     'TConvLayer': TConvLayer,
@@ -62,6 +64,7 @@ __all__ = [
         'TBatchNormalization1DLayer',
         'TBatchNormalization2DLayer',
         'TBatchNormalizationLayer',
+        'TConcatenateLayer',
         'TConv1DLayer',
         'TConv2DLayer',
         'TConvLayer',

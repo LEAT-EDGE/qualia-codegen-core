@@ -11,6 +11,7 @@ from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras 
     AveragePooling1D,
     AveragePooling2D,
     BatchNormalization,
+    Concatenate,
     Conv1D,
     Conv2D,
     Dense,
@@ -33,6 +34,7 @@ from .layers import (
     TBaseLayer,
     TBatchNormalization1DLayer,
     TBatchNormalization2DLayer,
+    TConcatenateLayer,
     TConv1DLayer,
     TConv2DLayer,
     TDenseLayer,
@@ -118,6 +120,9 @@ class KerasModelGraph(ModelGraph):
                                             layer.units,
                                             layer.use_bias,
                                             layer.bias.numpy()]),
+
+        # BrainMIX layer
+        Concatenate: lambda *_: (TConcatenateLayer, []),
     }
 
     ACTIVATION_MAPPING: ClassVar[dict[Callable[[tf.Tensor], tf.Tensor], TActivation]] = {
