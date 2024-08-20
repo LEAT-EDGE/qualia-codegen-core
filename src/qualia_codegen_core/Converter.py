@@ -54,6 +54,7 @@ class Converter:
 
         # Custom BrainMIX layer
         layers.TConcatenateLayer: 'concatenate',
+        layers.TSliceLayer: 'slice',
     }
 
     TEMPLATE_PATH = files('qualia_codegen_core.assets')

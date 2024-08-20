@@ -20,6 +20,7 @@ from .TMaxPooling1DLayer import TMaxPooling1DLayer
 from .TMaxPooling2DLayer import TMaxPooling2DLayer
 from .TMaxPoolingLayer import TMaxPoolingLayer
 from .TPermuteLayer import TPermuteLayer
+from .TSliceLayer import TSliceLayer
 from .TSumLayer import TSumLayer
 from .TZeroPadding1DLayer import TZeroPadding1DLayer
 from .TZeroPadding2DLayer import TZeroPadding2DLayer
@@ -48,6 +49,7 @@ layers_t = {
     'TMaxPooling2DLayer': TMaxPooling2DLayer,
     'TMaxPoolingLayer': TMaxPoolingLayer,
     'TPermuteLayer': TPermuteLayer,
+    'TSliceLayer': TSliceLayer,
     'TSumLayer': TSumLayer,
     'TZeroPadding1DLayer': TZeroPadding1DLayer,
     'TZeroPadding2DLayer': TZeroPadding2DLayer,
@@ -77,6 +79,7 @@ __all__ = [
         'TMaxPooling2DLayer',
         'TMaxPoolingLayer',
         'TPermuteLayer',
+        'TSliceLayer',
         'TSumLayer',
         'TZeroPadding1DLayer',
         'TZeroPadding2DLayer',

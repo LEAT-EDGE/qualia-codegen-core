@@ -43,6 +43,7 @@ from .layers import (
     TInputLayer,
     TMaxPooling1DLayer,
     TMaxPooling2DLayer,
+    TSliceLayer,
     TZeroPadding1DLayer,
     TZeroPadding2DLayer,
 )
@@ -57,6 +58,7 @@ except ImportError:
     try:
         # Keras >= 2.13.1
         from keras.src.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
+        from keras.src.layers.core.tf_op_layer import SlicingOpLambda
     except ImportError:
         # Keras < 2.13.0
         from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
@@ -122,6 +124,8 @@ class KerasModelGraph(ModelGraph):
                                             layer.bias.numpy()]),
 
         # BrainMIX layer
+        SlicingOpLambda: lambda layer, _: (TSliceLayer, [tuple(slice(s['start'], s['stop'], s['step'])
+                                                               for s in layer.inbound_nodes[0].call_kwargs['slice_spec'])]),
         Concatenate: lambda *_: (TConcatenateLayer, []),
     }
 
