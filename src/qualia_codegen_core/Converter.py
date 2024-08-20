@@ -54,6 +54,7 @@ class Converter:
 
         # Custom BrainMIX layer
         layers.TConcatenateLayer: 'concatenate',
+        layers.TSampleNormLayer: 'samplenorm',
         layers.TSliceLayer: 'slice',
     }
 

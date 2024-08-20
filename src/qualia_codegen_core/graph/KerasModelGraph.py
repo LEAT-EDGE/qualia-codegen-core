@@ -26,6 +26,7 @@ from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras 
 
 from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shape, ShapeOptional, Shapes
 
+from .keras.SampleNormLayer import SampleNormLayer
 from .layers import (
     TActivationLayer,
     TAddLayer,
@@ -43,11 +44,13 @@ from .layers import (
     TInputLayer,
     TMaxPooling1DLayer,
     TMaxPooling2DLayer,
+    TSampleNormLayer,
     TSliceLayer,
     TZeroPadding1DLayer,
     TZeroPadding2DLayer,
 )
 from .layers.TActivationLayer import TActivation
+from .layers.TSampleNormLayer import TSampleNormMode
 from .ModelGraph import ModelGraph
 
 try:
@@ -124,6 +127,7 @@ class KerasModelGraph(ModelGraph):
                                             layer.bias.numpy()]),
 
         # BrainMIX layer
+        SampleNormLayer: lambda layer, _: (TSampleNormLayer, [KerasModelGraph.SAMPLENORM_MODE_MAPPING[layer.norm]]),
         SlicingOpLambda: lambda layer, _: (TSliceLayer, [tuple(slice(s['start'], s['stop'], s['step'])
                                                                for s in layer.inbound_nodes[0].call_kwargs['slice_spec'])]),
         Concatenate: lambda *_: (TConcatenateLayer, []),
@@ -133,6 +137,11 @@ class KerasModelGraph(ModelGraph):
         relu: TActivation.RELU,
         softmax: TActivation.SOFTMAX,
         linear: TActivation.LINEAR,
+    }
+
+    SAMPLENORM_MODE_MAPPING: ClassVar[dict[str, TSampleNormMode]] = {
+        'z': TSampleNormMode.ZSCORE,
+        'minmax': TSampleNormMode.MINMAX,
     }
 
     def __init__(self, model: Model) -> None:
