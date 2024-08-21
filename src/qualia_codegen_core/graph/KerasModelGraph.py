@@ -61,7 +61,7 @@ except ImportError:
     try:
         # Keras >= 2.13.1
         from keras.src.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
-        from keras.src.layers.core.tf_op_layer import SlicingOpLambda
+        from keras.src.layers.core.tf_op_layer import SlicingOpLambda  # type: ignore[import-untyped] # No stubs for keras package
     except ImportError:
         # Keras < 2.13.0
         from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
@@ -69,7 +69,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     import numpy.typing
-    import tensorflow as tf  # type: ignore[import-untyped]
+    import tensorflow as tf
     from keras import Model  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)

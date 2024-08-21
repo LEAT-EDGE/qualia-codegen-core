@@ -45,7 +45,7 @@ def load_modelgraph(filepath: Path, module_name: str = '', *strargs: str) -> Mod
         return TorchModelGraph(tmodel).convert()
 
     if is_hdf5(filepath):  # Keras
-        import tensorflow as tf  # type: ignore[import-untyped]
+        import tensorflow as tf
         from keras.models import load_model  # type: ignore[import-untyped] # No stubs for keras package
 
         from .graph.keras.SampleNormLayer import SampleNormLayer

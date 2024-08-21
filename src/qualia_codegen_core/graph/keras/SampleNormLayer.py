@@ -1,7 +1,7 @@
 import logging
 import sys
 
-import keras
+import keras  # type: ignore[import-untyped] # No stubs for keras package
 import tensorflow as tf
 
 if sys.version_info >= (3, 12):
@@ -11,7 +11,7 @@ else:
 
 logger = logging.getLogger(__name__)
 
-class SampleNormLayer(keras.layers.Layer):
+class SampleNormLayer(keras.layers.Layer):  # type: ignore[misc]
     """custom layer to normalize input data."""
 
     def __init__(self,
@@ -25,7 +25,7 @@ class SampleNormLayer(keras.layers.Layer):
             raise ValueError
         self.norm = norm
 
-    @override
+    @override  # type: ignore[misc]
     def call(self, inputs: tf.Tensor) -> tf.Tensor:
         """Normalize each input sample."""
         if self.norm == 'z':
