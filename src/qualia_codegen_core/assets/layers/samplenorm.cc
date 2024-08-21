@@ -47,6 +47,8 @@ static inline void {{ node.layer.name }}(
     }
 {% endfor %}
 
+  max -= min;
+
     // Normalize
 {% for dim in node.input_shape[0][1:-1] %}
     for (size_t i_{{ loop.index }} = 0; i_{{ loop.index }} < {{ dim }}; i_{{ loop.index }}++) { 
