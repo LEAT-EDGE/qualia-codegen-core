@@ -19,11 +19,14 @@ static inline void {{ node.layer.name }}(
   {{ node.layer.name }}_output_type output) {    // OUT
 
 {% for dim in node.input_shape[0][1:] %}
-  for (size_t i_{{ loop.index }} = {{ node.layer.slices[loop.index].start if node.layer.slices[loop.index].start is not none else 0 }};
+  size_t i_{{ loop.index }}, o_{{ loop.index }};
+  for (i_{{ loop.index }} = {{ node.layer.slices[loop.index].start if node.layer.slices[loop.index].start is not none else 0 }}, // Input index
+    o_{{ loop.index }} = 0; // Output index
     i_{{ loop.index }} < {{ node.layer.slices[loop.index].stop if node.layer.slices[loop.index].stop is not none else dim }};
-    i_{{ loop.index }} += {{ node.layer.slices[loop.index].step if node.layer.slices[loop.index].step is not none else 1 }}) { 
+    i_{{ loop.index }} += {{ node.layer.slices[loop.index].step if node.layer.slices[loop.index].step is not none else 1 }},
+    o_{{ loop.index }}++) {
 {% endfor %}
-    output{% for dim in node.input_shape[0][1:] %}[i_{{ loop.index }}]{% endfor %} = input{% for dim in node.input_shape[0][1:] %}[i_{{ loop.index }}]{% endfor %};
+    output{% for dim in node.input_shape[0][1:] %}[o_{{ loop.index }}]{% endfor %} = input{% for dim in node.input_shape[0][1:] %}[i_{{ loop.index }}]{% endfor %};
 {% for dim in node.input_shape[0][1:] %}
   }
 {% endfor %}
