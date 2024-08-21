@@ -31,7 +31,7 @@ def load_modelgraph(filepath: Path, module_name: str = '', *strargs: str) -> Mod
 
         import torch
 
-        args = [eval(arg) for arg in strargs] # noqa: PGH001 S307 eval() is used to convert string to expression for any arg type
+        args = [eval(arg) for arg in strargs] # noqa: S307 eval() is used to convert string to expression for any arg type
 
         modname, classname = module_name.rsplit('.', 1)
         mod = importlib.import_module(modname)
