@@ -6,9 +6,10 @@ default:
   before_script:
     - pacman-key --init
     - pacman -Sy --noconfirm archlinux-keyring
-    - pacman -Syu --noconfirm --needed python-pytorch python-tensorflow python-pip python-numpy python-jinja python-graphviz
+    - pacman -Syu --noconfirm --needed python-keras  python-pytorch python-tensorflow python-pip python-numpy python-jinja python-graphviz
     - pacman -S --noconfirm --needed python-pytest python-pytest-dependency python-pytest-xdist python-pytest-env
     - pacman -S --noconfirm --needed python-ruff mypy git
+    - pip install --break-system-packages types-tensorflow
 
 stages:          # List of stages for jobs, and their order of execution
   - check
