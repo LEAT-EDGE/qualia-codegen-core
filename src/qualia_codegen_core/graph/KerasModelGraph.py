@@ -278,7 +278,10 @@ class KerasModelGraph(ModelGraph):
         if not hasattr(layer, 'input_shape'):
             if isinstance(layer, InputLayer): # get_build_config() returns None for InputLayer
                 return cast(tuple[int, ...], layer.batch_shape)
-            return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
+            if hasattr(layer, 'get_build_config'):
+                return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
+            # Some operations do not have get_build_config() so try to use input tensor shape instead
+            return cast(tuple[int, ...], layer.input.shape)
         return cast(tuple[int, ...], layer.input_shape)
 
     @classmethod
@@ -287,7 +290,10 @@ class KerasModelGraph(ModelGraph):
         if not hasattr(layer, 'output_shape'):
             if isinstance(layer, InputLayer): # compute_output_shape not implemented for InputLayer
                 return cast(tuple[int, ...], layer.batch_shape)
-            return cast(tuple[int, ...], layer.compute_output_shape(cls.__get_input_shape(layer)))
+            if hasattr(layer, 'compute_output_shape'):
+                return cast(tuple[int, ...], layer.compute_output_shape(cls.__get_input_shape(layer)))
+            # Some operations do not have compute_output_shape() so try to use input tensor shape instead
+            return cast(tuple[int, ...], layer.output.shape)
         return cast(tuple[int, ...], layer.output_shape)
 
     @classmethod
