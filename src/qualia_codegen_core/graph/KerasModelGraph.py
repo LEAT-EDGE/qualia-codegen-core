@@ -133,7 +133,7 @@ class KerasModelGraph(ModelGraph):
     }
 
     try: # Keras 3.x
-        MAPPING[GetItem] = lambda layer, _: (TSliceLayer, [layer._inbound_nodes[0].arguments.args[1]])
+        MAPPING[GetItem] = lambda layer, _: (TSliceLayer, [layer._inbound_nodes[0].arguments.args[1]])  # noqa: SLF001
     except NameError: # Keras 2.x
         MAPPING[SlicingOpLambda] = lambda layer, _: (TSliceLayer,
                                                      [tuple(slice(s['start'], s['stop'], s['step'])
@@ -230,8 +230,7 @@ class KerasModelGraph(ModelGraph):
             if hasattr(n, 'operation'):
                 inlayers.append(n.operation)
             else:
-                for inb in n.iterate_inbound():
-                    inlayers.append(inb[0])
+                inlayers += [inb[0] for inb in n.iterate_inbound()]
         return inlayers
 
     @classmethod
