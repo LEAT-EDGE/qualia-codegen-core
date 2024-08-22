@@ -57,15 +57,16 @@ try:
     # Keras 3.x
     from keras.layers import InputLayer
     from keras.src.ops.node import Node  # type: ignore[import-untyped]
+    from keras.src.ops.numpy import GetItem  # type: ignore[import-untyped]
 except ImportError:
     try:
         # Keras >= 2.13.1
         from keras.src.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
-        from keras.src.layers.core.tf_op_layer import SlicingOpLambda  # type: ignore[import-untyped] # No stubs for keras package
     except ImportError:
         # Keras < 2.13.0
         from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
     from keras.src.engine.node import Node  # type: ignore[import-untyped]
+    from keras.src.layers.core.tf_op_layer import SlicingOpLambda  # type: ignore[import-untyped] # No stubs for keras package
 
 if TYPE_CHECKING:
     import numpy.typing
@@ -128,10 +129,15 @@ class KerasModelGraph(ModelGraph):
 
         # BrainMIX layer
         SampleNormLayer: lambda layer, _: (TSampleNormLayer, [KerasModelGraph.SAMPLENORM_MODE_MAPPING[layer.norm]]),
-        SlicingOpLambda: lambda layer, _: (TSliceLayer, [tuple(slice(s['start'], s['stop'], s['step'])
-                                                               for s in layer.inbound_nodes[0].call_kwargs['slice_spec'])]),
         Concatenate: lambda *_: (TConcatenateLayer, []),
     }
+
+    try: # Keras 3.x
+        MAPPING[GetItem] = lambda layer, _: (TSliceLayer, [layer._inbound_nodes[0].arguments.args[1]])
+    except NameError: # Keras 2.x
+        MAPPING[SlicingOpLambda] = lambda layer, _: (TSliceLayer,
+                                                     [tuple(slice(s['start'], s['stop'], s['step'])
+                                                            for s in layer.inbound_nodes[0].call_kwargs['slice_spec'])])
 
     ACTIVATION_MAPPING: ClassVar[dict[Callable[[tf.Tensor], tf.Tensor], TActivation]] = {
         relu: TActivation.RELU,
