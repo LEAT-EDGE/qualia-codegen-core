@@ -54,8 +54,16 @@ def load_modelgraph(filepath: Path, module_name: str = '', *strargs: str) -> Mod
         # We don't need a GPU, don't request it
         tf.config.set_visible_devices([], 'GPU')
 
-        kmodel = load_model(filepath,
-                            custom_objects={'SampleNormLayer': SampleNormLayer})
+        custom_objects: dict[str, type] = {'SampleNormLayer': SampleNormLayer}
+
+        try:
+            from keras.src.ops.numpy import GetItem  # type: ignore[import-untyped] # No stubs for keras package
+            custom_objects['GetItem'] = GetItem
+        except ImportError:
+            pass
+
+        kmodel = load_model(filepath, custom_objects=custom_objects)
+
         logger.info('Keras model:')
         kmodel.summary()
 
