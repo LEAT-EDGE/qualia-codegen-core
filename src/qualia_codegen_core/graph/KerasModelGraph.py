@@ -151,14 +151,31 @@ class KerasModelGraph(ModelGraph):
 
     def convert(self) -> ModelGraph | None:
         for layer in self.__model.layers:
-            conv = self.__convert(layer)
-            if conv is False: # Conversion failure
+            if not self.__convert_and_add_layer(layer):
                 return None
-            inlayers = self.__get_layer_input_layers(layer)
-            if inlayers is False:
-                return None # Conversion failure
-            self.add_layer(conv, inlayers=inlayers)
         return self
+
+    def __convert_and_add_layer(self, layer: Layer) -> bool:
+        conv = self.__convert(layer)
+        if conv is False: # Conversion failure
+            return False
+
+        inlayers = self.__get_layer_input_layers(layer)
+
+        converted_inlayers: list[TBaseLayer] = []
+        for inlayer in inlayers:
+            converted_inlayer = self.__convert(inlayer)
+            if converted_inlayer is False:
+                return False # Conversion failure
+
+            # In case the Keras layers list is not ordered properly, some input layers may not have been added to our graph yet
+            if not self.find_node_from_layer(converted_inlayer) and not self.__convert_and_add_layer(inlayer):
+                return False # Conversion failure
+
+            converted_inlayers.append(converted_inlayer)
+
+        self.add_layer(conv, inlayers=converted_inlayers)
+        return True
 
     def __none_to_one_shape(self, shape: ShapeOptional) -> Shape:
         return Shape(s if s is not None else 1 for s in shape)
@@ -200,21 +217,15 @@ class KerasModelGraph(ModelGraph):
         self.__layer_cache[layer] = res = cls(*dataclasses.astuple(args), *params)
         return res
 
-    def __get_layer_input_layers(self, layer: Layer) -> Literal[False] | list[Layer]:
-        inlayers = []
+    def __get_layer_input_layers(self, layer: Layer) -> list[Layer]:
+        inlayers: list[TBaseLayer] = []
         for n in self.__get_inbound_nodes(layer):
             # Keras 3.x compatibility
             if hasattr(n, 'operation'):
-                inlayer = self.__convert(n.operation)
-                if inlayer is False:
-                    return False
-                inlayers.append(inlayer)
+                inlayers.append(n.operation)
             else:
                 for inb in n.iterate_inbound():
-                    inlayer = self.__convert(inb[0])
-                    if inlayer is False:
-                        return False
-                    inlayers.append(inlayer)
+                    inlayers.append(inb[0])
         return inlayers
 
     @classmethod
