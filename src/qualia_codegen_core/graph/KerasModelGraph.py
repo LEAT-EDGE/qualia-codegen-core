@@ -186,7 +186,7 @@ class KerasModelGraph(ModelGraph):
         # Not the final layer type, just used to collect the common args
         args = TBaseLayer(input_shape=self.__convert_shapes(self.__get_input_shape(layer)),
                 output_shape=self.__convert_shapes(self.__get_output_shape(layer)),
-                output_dtype=self.__convert_dtypes(layer.dtype),
+                output_dtype=self.__convert_dtypes(layer.dtype if hasattr(layer, 'dtype') else layer.output.dtype),
                 name=layer.name)
 
         options = KerasModelGraph.MAPPING.get(type(layer), None)
