@@ -35,6 +35,11 @@ extern "C" {
 #define MODEL_INPUT_NUMBER_T {{ qtype2ctype(nodes[0].q.number_type, nodes[0].q.width) }}
 #define MODEL_INPUT_LONG_NUMBER_T {{ qtype2ctype(nodes[0].q.number_type, nodes[0].q.long_width) }}
 
+#define MODEL_OUTPUT_SCALE_FACTOR {{ nodes[-1].q.output_scale_factor }} // scale factor of last layer
+#define MODEL_OUTPUT_ROUND_MODE ROUND_MODE_{{ nodes[-1].q.output_round_mode | upper }}
+#define MODEL_OUTPUT_NUMBER_T {{ qtype2ctype(nodes[-1].q.number_type, nodes[0].q.width) }}
+#define MODEL_OUTPUT_LONG_NUMBER_T {{ qtype2ctype(nodes[-1].q.number_type, nodes[0].q.long_width) }}
+
 // node 0 is InputLayer so use its output shape as input shape of the model
 // typedef {{ number_type }} input_t{% for dim in nodes[0].output_shape[0][1:] %}[{{ dim }}]{% endfor %};
 typedef {{ qtype2ctype(nodes[0].q.number_type, nodes[0].q.width) }} input_t{% for dim in nodes[0].output_shape[0][1:] %}[{{ dim }}]{% endfor %};
