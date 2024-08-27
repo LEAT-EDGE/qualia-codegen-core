@@ -19,10 +19,14 @@ public:
   }
 
   void update(std::array<T, N> preds, std::array<T, N> targets) {
-    auto e = std::max_element(preds.begin(), preds.end());
-    auto i = std::distance(preds.begin(), e);
+    auto preds_e = std::max_element(preds.begin(), preds.end());
+    auto preds_i = std::distance(preds.begin(), preds_e);
+    auto targets_e = std::max_element(targets.begin(), targets.end());
+    auto targets_i = std::distance(targets.begin(), targets_e);
 
-    valids += targets.at(i);
+    if (preds_i == targets_i) {
+      valids++;
+    }
 
     this->count++;
   }
