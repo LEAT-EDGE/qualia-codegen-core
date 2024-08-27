@@ -50,7 +50,7 @@ float *serialBufToFloats(char buf[], size_t buflen) {
   return input;
 }
 
-static inline float round_with_mode(float v, round_mode_t round_mode) {
+float round_with_mode(float v, round_mode_t round_mode) {
 	if (round_mode == ROUND_MODE_FLOOR) {
 		return floorf(v);
 	} else if (round_mode == ROUND_MODE_NEAREST) {

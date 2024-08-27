@@ -18,8 +18,10 @@ struct NNResult {
 };
 
 float *serialBufToFloats(char buf[], size_t buflen);
+float round_with_mode(float v, round_mode_t round_mode);
 struct NNResult neuralNetworkInfer(const float input[]);
 void neuralNetworkRun(const float input[], output_t output);
+
 #ifdef __cplusplus
 }
 #include <array>
