@@ -32,7 +32,7 @@ public:
   }
 
   metric_return_t compute() {
-    return this->valids / this->count;
+    return this->valids / static_cast<metric_return_t>(this->count);
   }
 };
 
