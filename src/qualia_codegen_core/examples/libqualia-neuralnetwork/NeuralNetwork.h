@@ -37,7 +37,7 @@ void neuralNetworkRun(const float input[], output_t output);
 
 template<size_t NMetrics = 0, typename MetricT = float, std::size_t MetricN = 0>
 class NeuralNetwork {
-private:
+protected:
   std::array<Metric<MetricT, MetricN>*, NMetrics> metrics;
 
   unsigned int inference_count = 0;
@@ -65,7 +65,7 @@ public:
     return {inference_count, i, *e};
   }
 
-  std::array<std::remove_all_extents<output_t>::type, MODEL_OUTPUT_SAMPLES> evaluate(
+  virtual std::array<std::remove_all_extents<output_t>::type, MODEL_OUTPUT_SAMPLES> evaluate(
     const std::array<float, MODEL_INPUT_DIMS> input,
     const std::array<float, MODEL_OUTPUT_SAMPLES> targets) {
     auto preds = this->run(input);
