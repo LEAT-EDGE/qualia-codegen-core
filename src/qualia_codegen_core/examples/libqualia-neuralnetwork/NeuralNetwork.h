@@ -70,8 +70,17 @@ public:
     const std::array<float, MODEL_OUTPUT_SAMPLES> targets) {
     auto preds = this->run(input);
 
-    for (auto &metric: metrics) {
-      metric->update(preds, targets);
+    // Quantize targets to match outputs
+    std::array<MODEL_INPUT_NUMBER_T, MODEL_OUTPUT_SAMPLES> q_targets{};
+    std::transform(targets.begin(),
+                   targets.end(),
+                   q_targets.begin(),
+                   [](float v) {
+                    return clamp_to(MODEL_OUTPUT_NUMBER_T, (MODEL_OUTPUT_LONG_NUMBER_T)round_with_mode(v * (1 << MODEL_OUTPUT_SCALE_FACTOR), MODEL_OUTPUT_ROUND_MODE));
+                   });
+
+    for (auto &metric: this->metrics) {
+      metric->update(preds, q_targets);
     }
 
     return preds;
