@@ -1,7 +1,6 @@
 /**
   ******************************************************************************
   * @file    conv.cc
-  * @author  Sébastien Bilavarn, LEAT, CNRS, Université Côte d'Azur, France
   * @author  Pierre-Emmanuel Novac <penovac@unice.fr>, LEAT, CNRS, Université Côte d'Azur, France
   * @version V2.0
   * @date    24 march 2020
