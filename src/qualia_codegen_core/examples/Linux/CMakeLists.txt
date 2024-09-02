@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.15)
 
 project(Linux C CXX ASM)
 
+set(Python3_FIND_STRATEGY "LOCATION")
+set(Python3_FIND_UNVERSIONED_NAMES FIRST)
 find_package(Python3 REQUIRED
   COMPONENTS Interpreter
 )
