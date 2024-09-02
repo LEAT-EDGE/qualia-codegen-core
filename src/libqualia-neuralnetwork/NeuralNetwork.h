@@ -50,9 +50,16 @@ public:
   }
 
   std::array<std::remove_all_extents<output_t>::type, MODEL_OUTPUT_SAMPLES> run(const std::array<float, MODEL_INPUT_DIMS> input) {
-    output_t output;
-    neuralNetworkRun(input.data(), output);
-    return std::to_array(output);
+    std::array<std::remove_all_extents<output_t>::type, MODEL_OUTPUT_SAMPLES> output;
+    output_t c_output;
+
+    neuralNetworkRun(input.data(), c_output);
+
+    for (size_t i = 0; i < MODEL_OUTPUT_SAMPLES; i++) {
+      output[i] = c_output[i];
+    }
+
+    return output;
   }
 
   NNResult classify(const std::array<float, MODEL_INPUT_DIMS> input) {
