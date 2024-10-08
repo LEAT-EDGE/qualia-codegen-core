@@ -2,6 +2,28 @@ cmake_minimum_required(VERSION 3.13)
 
 project(NucleoL452REP C CXX ASM)
 
+find_package(Python3 REQUIRED
+  COMPONENTS Interpreter
+)
+
+message(STATUS "Searching for libqualia-neuralnetwork sources")
+execute_process(
+  COMMAND ${Python3_EXECUTABLE} -c "from importlib.resources import files; print(files('libqualia-neuralnetwork'))"
+  RESULT_VARIABLE LIBQUALIA_NEURALNETWORK_RESULT
+  OUTPUT_VARIABLE LIBQUALIA_NEURALNETWORK_SOURCE_DIR
+  ERROR_VARIABLE LIBQUALIA_NEURALNETWORK_ERROR
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_STRIP_TRAILING_WHITESPACE
+)
+
+if (NOT "${LIBQUALIA_NEURALNETWORK_ERROR}" STREQUAL "")
+  message(FATAL_ERROR ${LIBQUALIA_NEURALNETWORK_ERROR})
+endif()
+if (NOT ${LIBQUALIA_NEURALNETWORK_RESULT} EQUAL 0)
+  message(FATAL_ERROR ${LIBQUALIA_NEURALNETWORK_RESULT})
+endif()
+message(STATUS "Found libqualia-neuralnetwork: ${LIBQUALIA_NEURALNETWORK_SOURCE_DIR}")
+
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
 # which compilers to use for C and C++
@@ -51,12 +73,12 @@ add_link_options(
   ${NucleoL452REP_CFLAGS}
 
   "-specs=nosys.specs"
-  "-T" "${CMAKE_SOURCE_DIR}/STM32L452RETxP_FLASH.ld"
+  "-T" "${CMAKE_CURRENT_SOURCE_DIR}/STM32L452RETxP_FLASH.ld"
   "-z" "separate-code"
   "-Wl,--print-memory-usage"
 )
 
-add_subdirectory(../libqualia-neuralnetwork ${CMAKE_CURRENT_BINARY_DIR}/libqualia-neuralnetwork)
+add_subdirectory(${LIBQUALIA_NEURALNETWORK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/libqualia-neuralnetwork)
 
 add_executable(${PROJECT_NAME}
   Core/Src/main.c
