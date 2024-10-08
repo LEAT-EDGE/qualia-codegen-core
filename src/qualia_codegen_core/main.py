@@ -31,7 +31,7 @@ def load_modelgraph(filepath: Path, module_name: str = '', *strargs: str) -> Mod
 
         import torch
 
-        args = [eval(arg) for arg in strargs] # noqa: PGH001 S307 eval() is used to convert string to expression for any arg type
+        args = [eval(arg) for arg in strargs] # noqa: S307 eval() is used to convert string to expression for any arg type
 
         modname, classname = module_name.rsplit('.', 1)
         mod = importlib.import_module(modname)
@@ -45,7 +45,7 @@ def load_modelgraph(filepath: Path, module_name: str = '', *strargs: str) -> Mod
         return TorchModelGraph(tmodel).convert()
 
     if is_hdf5(filepath):  # Keras
-        import tensorflow as tf  # type: ignore[import-untyped]
+        import tensorflow as tf
         from keras.models import load_model  # type: ignore[import-untyped] # No stubs for keras package
 
         from .graph.KerasModelGraph import KerasModelGraph

@@ -45,7 +45,7 @@ class Quantizer:
         new_arr = np.clip(new_arr, self.number_min, self.number_max)
         return new_arr.astype(target_dtype)
 
-    def quantize_weights_with_scale_factor(self,  # noqa: PLR0913
+    def quantize_weights_with_scale_factor(self,
                                            node: LayerNode,
                                            scale_factor: int,
                                            round_mode: RoundMode,

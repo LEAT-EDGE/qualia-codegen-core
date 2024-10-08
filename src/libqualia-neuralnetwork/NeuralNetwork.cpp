@@ -2,9 +2,12 @@
 
 #include "NeuralNetwork.h"
 
+#include <algorithm>
 #include <string.h>
 #include <cstdint>
 #include <cmath>
+#include <array>
+#include <type_traits>
 
 extern "C" {
 #ifdef WITH_CMSIS_NN
@@ -16,6 +19,21 @@ extern "C" {
 unsigned int inference_count = 0;
 
 static float input[MODEL_INPUT_DIMS];
+
+template<size_t InputDims>
+void convert_input_vector(const std::array<float, InputDims> &input, input_t out) {
+	static_assert(InputDims == sizeof(input_t) / sizeof(MODEL_INPUT_NUMBER_T));
+	MODEL_INPUT_NUMBER_T *out_flat = reinterpret_cast<MODEL_INPUT_NUMBER_T *>(out);
+
+	for (size_t i = 0; i < InputDims; i++) {
+		// Fixed-point conversion if model input is integer
+		if constexpr(std::is_integral_v<MODEL_INPUT_NUMBER_T>) {
+			out_flat[i] = clamp_to(MODEL_INPUT_NUMBER_T, (MODEL_INPUT_LONG_NUMBER_T)round_with_mode(input.at(i) * (1<<MODEL_INPUT_SCALE_FACTOR), MODEL_INPUT_ROUND_MODE));
+		} else {
+			out_flat[i] = input.at(i);
+		}
+	}
+}
 
 extern "C" {
 
@@ -32,7 +50,7 @@ float *serialBufToFloats(char buf[], size_t buflen) {
   return input;
 }
 
-static inline float round_with_mode(float v, round_mode_t round_mode) {
+float round_with_mode(float v, round_mode_t round_mode) {
 	if (round_mode == ROUND_MODE_FLOOR) {
 		return floorf(v);
 	} else if (round_mode == ROUND_MODE_NEAREST) {
@@ -42,9 +60,9 @@ static inline float round_with_mode(float v, round_mode_t round_mode) {
 	}
 }
 
-struct NNResult neuralNetworkInfer(float input[]) {
+
+void neuralNetworkRun(const float input[], output_t output) {
 	static input_t inputs;
-	static output_t outputs;
 
 	MODEL_INPUT_NUMBER_T *input_flat = (MODEL_INPUT_NUMBER_T*)inputs;
 
@@ -64,7 +82,13 @@ struct NNResult neuralNetworkInfer(float input[]) {
 	}
 
 	// Run inference
-	cnn(inputs, outputs);
+	cnn(inputs, output);
+}
+
+struct NNResult neuralNetworkInfer(const float input[]) {
+	static output_t outputs;
+
+	neuralNetworkRun(input, outputs);
 
 	// Get output class
 	unsigned int label = 0;
