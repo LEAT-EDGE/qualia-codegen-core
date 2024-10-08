@@ -294,7 +294,7 @@ class KerasModelGraph(ModelGraph):
         if not hasattr(layer, 'input_shape'):
             if isinstance(layer, InputLayer): # get_build_config() returns None for InputLayer
                 return cast(tuple[int, ...], layer.batch_shape)
-            if hasattr(layer, 'get_build_config'):
+            if hasattr(layer, 'get_build_config') and layer.get_build_config() is not None:
                 return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
             # Some operations do not have get_build_config() so try to use input tensor shape instead
             return cast(tuple[int, ...], layer.input.shape)
