@@ -62,7 +62,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     import numpy.typing
-    import tensorflow as tf  # type: ignore[import-untyped]
+    import tensorflow as tf
     from keras import Model  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
