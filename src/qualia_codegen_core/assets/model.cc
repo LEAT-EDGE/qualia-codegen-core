@@ -51,7 +51,7 @@ void cnn(
           [{{dim}}]
       {%- endfor -%};
   {{ qtype2ctype(innode.q.number_type, innode.q.width) }}_to_{{ qtype2ctype(node.q.number_type, node.q.width) }}(
-      {%- if outer_loop.index == 1 %} // First layer uses input passed as model parameter
+      {%- if innode.layer.__class__.__name__ == 'TInputLayer' %} // Model input is passed as model parameter
         ({{ qtype2ctype(innode.q.number_type, innode.q.width) }}*)input,
       {%- else %}
         ({{ qtype2ctype(innode.q.number_type, innode.q.width) }}*)activations{{ allocation.index[innode] }}.{{ innode.layer.name }}_output,
@@ -68,7 +68,7 @@ void cnn(
     // type warning, use instead :
     {{innode.layer.name}}_output_convert_{{outer_loop.index}},
     //activations{{ allocation.index[innode] }}.{{ innode.layer.name }}_output,
-      {%- elif outer_loop.index == 1 %} // First layer uses input passed as model parameter
+      {%- elif innode.layer.__class__.__name__ == 'TInputLayer' %} // Model input is passed as model parameter
     input,
       {%- else %}
     activations{{ allocation.index[innode] }}.{{ innode.layer.name }}_output,

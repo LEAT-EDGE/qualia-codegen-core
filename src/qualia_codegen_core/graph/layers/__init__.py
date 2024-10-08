@@ -7,6 +7,7 @@ from .TBaseLayer import TBaseLayer
 from .TBatchNormalization1DLayer import TBatchNormalization1DLayer
 from .TBatchNormalization2DLayer import TBatchNormalization2DLayer
 from .TBatchNormalizationLayer import TBatchNormalizationLayer
+from .TConcatenateLayer import TConcatenateLayer
 from .TConv1DLayer import TConv1DLayer
 from .TConv2DLayer import TConv2DLayer
 from .TConvLayer import TConvLayer
@@ -19,6 +20,8 @@ from .TMaxPooling1DLayer import TMaxPooling1DLayer
 from .TMaxPooling2DLayer import TMaxPooling2DLayer
 from .TMaxPoolingLayer import TMaxPoolingLayer
 from .TPermuteLayer import TPermuteLayer
+from .TSampleNormLayer import TSampleNormLayer
+from .TSliceLayer import TSliceLayer
 from .TSumLayer import TSumLayer
 from .TZeroPadding1DLayer import TZeroPadding1DLayer
 from .TZeroPadding2DLayer import TZeroPadding2DLayer
@@ -34,6 +37,7 @@ layers_t = {
     'TBatchNormalization1DLayer': TBatchNormalization1DLayer,
     'TBatchNormalization2DLayer': TBatchNormalization2DLayer,
     'TBatchNormalizationLayer': TBatchNormalizationLayer,
+    'TConcatenateLayer': TConcatenateLayer,
     'TConv1DLayer': TConv1DLayer,
     'TConv2DLayer': TConv2DLayer,
     'TConvLayer': TConvLayer,
@@ -46,6 +50,8 @@ layers_t = {
     'TMaxPooling2DLayer': TMaxPooling2DLayer,
     'TMaxPoolingLayer': TMaxPoolingLayer,
     'TPermuteLayer': TPermuteLayer,
+    'TSampleNormLayer': TSampleNormLayer,
+    'TSliceLayer': TSliceLayer,
     'TSumLayer': TSumLayer,
     'TZeroPadding1DLayer': TZeroPadding1DLayer,
     'TZeroPadding2DLayer': TZeroPadding2DLayer,
@@ -62,6 +68,7 @@ __all__ = [
         'TBatchNormalization1DLayer',
         'TBatchNormalization2DLayer',
         'TBatchNormalizationLayer',
+        'TConcatenateLayer',
         'TConv1DLayer',
         'TConv2DLayer',
         'TConvLayer',
@@ -74,6 +81,8 @@ __all__ = [
         'TMaxPooling2DLayer',
         'TMaxPoolingLayer',
         'TPermuteLayer',
+        'TSampleNormLayer',
+        'TSliceLayer',
         'TSumLayer',
         'TZeroPadding1DLayer',
         'TZeroPadding2DLayer',

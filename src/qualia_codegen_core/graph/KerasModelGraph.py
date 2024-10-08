@@ -11,6 +11,7 @@ from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras 
     AveragePooling1D,
     AveragePooling2D,
     BatchNormalization,
+    Concatenate,
     Conv1D,
     Conv2D,
     Dense,
@@ -25,6 +26,7 @@ from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras 
 
 from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shape, ShapeOptional, Shapes
 
+from .keras.SampleNormLayer import SampleNormLayer
 from .layers import (
     TActivationLayer,
     TAddLayer,
@@ -33,6 +35,7 @@ from .layers import (
     TBaseLayer,
     TBatchNormalization1DLayer,
     TBatchNormalization2DLayer,
+    TConcatenateLayer,
     TConv1DLayer,
     TConv2DLayer,
     TDenseLayer,
@@ -41,16 +44,20 @@ from .layers import (
     TInputLayer,
     TMaxPooling1DLayer,
     TMaxPooling2DLayer,
+    TSampleNormLayer,
+    TSliceLayer,
     TZeroPadding1DLayer,
     TZeroPadding2DLayer,
 )
 from .layers.TActivationLayer import TActivation
+from .layers.TSampleNormLayer import TSampleNormMode
 from .ModelGraph import ModelGraph
 
 try:
     # Keras 3.x
     from keras.layers import InputLayer
     from keras.src.ops.node import Node  # type: ignore[import-untyped]
+    from keras.src.ops.numpy import GetItem  # type: ignore[import-untyped]
 except ImportError:
     try:
         # Keras >= 2.13.1
@@ -59,6 +66,7 @@ except ImportError:
         # Keras < 2.13.0
         from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
     from keras.src.engine.node import Node  # type: ignore[import-untyped]
+    from keras.src.layers.core.tf_op_layer import SlicingOpLambda  # type: ignore[import-untyped] # No stubs for keras package
 
 if TYPE_CHECKING:
     import numpy.typing
@@ -118,12 +126,28 @@ class KerasModelGraph(ModelGraph):
                                             layer.units,
                                             layer.use_bias,
                                             layer.bias.numpy()]),
+
+        # BrainMIX layer
+        SampleNormLayer: lambda layer, _: (TSampleNormLayer, [KerasModelGraph.SAMPLENORM_MODE_MAPPING[layer.norm]]),
+        Concatenate: lambda *_: (TConcatenateLayer, []),
     }
+
+    try: # Keras 3.x
+        MAPPING[GetItem] = lambda layer, _: (TSliceLayer, [layer._inbound_nodes[0].arguments.args[1]])  # noqa: SLF001
+    except NameError: # Keras 2.x
+        MAPPING[SlicingOpLambda] = lambda layer, _: (TSliceLayer,
+                                                     [tuple(slice(s['start'], s['stop'], s['step'])
+                                                            for s in layer.inbound_nodes[0].call_kwargs['slice_spec'])])
 
     ACTIVATION_MAPPING: ClassVar[dict[Callable[[tf.Tensor], tf.Tensor], TActivation]] = {
         relu: TActivation.RELU,
         softmax: TActivation.SOFTMAX,
         linear: TActivation.LINEAR,
+    }
+
+    SAMPLENORM_MODE_MAPPING: ClassVar[dict[str, TSampleNormMode]] = {
+        'z': TSampleNormMode.ZSCORE,
+        'minmax': TSampleNormMode.MINMAX,
     }
 
     def __init__(self, model: Model) -> None:
@@ -133,14 +157,31 @@ class KerasModelGraph(ModelGraph):
 
     def convert(self) -> ModelGraph | None:
         for layer in self.__model.layers:
-            conv = self.__convert(layer)
-            if conv is False: # Conversion failure
+            if not self.__convert_and_add_layer(layer):
                 return None
-            inlayers = self.__get_layer_input_layers(layer)
-            if inlayers is False:
-                return None # Conversion failure
-            self.add_layer(conv, inlayers=inlayers)
         return self
+
+    def __convert_and_add_layer(self, layer: Layer) -> bool:
+        conv = self.__convert(layer)
+        if conv is False: # Conversion failure
+            return False
+
+        inlayers = self.__get_layer_input_layers(layer)
+
+        converted_inlayers: list[TBaseLayer] = []
+        for inlayer in inlayers:
+            converted_inlayer = self.__convert(inlayer)
+            if converted_inlayer is False:
+                return False # Conversion failure
+
+            # In case the Keras layers list is not ordered properly, some input layers may not have been added to our graph yet
+            if not self.find_node_from_layer(converted_inlayer) and not self.__convert_and_add_layer(inlayer):
+                return False # Conversion failure
+
+            converted_inlayers.append(converted_inlayer)
+
+        self.add_layer(conv, inlayers=converted_inlayers)
+        return True
 
     def __none_to_one_shape(self, shape: ShapeOptional) -> Shape:
         return Shape(s if s is not None else 1 for s in shape)
@@ -168,7 +209,7 @@ class KerasModelGraph(ModelGraph):
         # Not the final layer type, just used to collect the common args
         args = TBaseLayer(input_shape=self.__convert_shapes(self.__get_input_shape(layer)),
                 output_shape=self.__convert_shapes(self.__get_output_shape(layer)),
-                output_dtype=self.__convert_dtypes(layer.dtype),
+                output_dtype=self.__convert_dtypes(layer.dtype if hasattr(layer, 'dtype') else layer.output.dtype),
                 name=layer.name)
 
         options = KerasModelGraph.MAPPING.get(type(layer), None)
@@ -182,21 +223,14 @@ class KerasModelGraph(ModelGraph):
         self.__layer_cache[layer] = res = cls(*dataclasses.astuple(args), *params)
         return res
 
-    def __get_layer_input_layers(self, layer: Layer) -> Literal[False] | list[Layer]:
-        inlayers = []
+    def __get_layer_input_layers(self, layer: Layer) -> list[Layer]:
+        inlayers: list[TBaseLayer] = []
         for n in self.__get_inbound_nodes(layer):
             # Keras 3.x compatibility
             if hasattr(n, 'operation'):
-                inlayer = self.__convert(n.operation)
-                if inlayer is False:
-                    return False
-                inlayers.append(inlayer)
+                inlayers.append(n.operation)
             else:
-                for inb in n.iterate_inbound():
-                    inlayer = self.__convert(inb[0])
-                    if inlayer is False:
-                        return False
-                    inlayers.append(inlayer)
+                inlayers += [inb[0] for inb in n.iterate_inbound()]
         return inlayers
 
     @classmethod
@@ -260,7 +294,10 @@ class KerasModelGraph(ModelGraph):
         if not hasattr(layer, 'input_shape'):
             if isinstance(layer, InputLayer): # get_build_config() returns None for InputLayer
                 return cast(tuple[int, ...], layer.batch_shape)
-            return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
+            if hasattr(layer, 'get_build_config'):
+                return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
+            # Some operations do not have get_build_config() so try to use input tensor shape instead
+            return cast(tuple[int, ...], layer.input.shape)
         return cast(tuple[int, ...], layer.input_shape)
 
     @classmethod
@@ -269,7 +306,10 @@ class KerasModelGraph(ModelGraph):
         if not hasattr(layer, 'output_shape'):
             if isinstance(layer, InputLayer): # compute_output_shape not implemented for InputLayer
                 return cast(tuple[int, ...], layer.batch_shape)
-            return cast(tuple[int, ...], layer.compute_output_shape(cls.__get_input_shape(layer)))
+            if hasattr(layer, 'compute_output_shape'):
+                return cast(tuple[int, ...], layer.compute_output_shape(cls.__get_input_shape(layer)))
+            # Some operations do not have compute_output_shape() so try to use input tensor shape instead
+            return cast(tuple[int, ...], layer.output.shape)
         return cast(tuple[int, ...], layer.output_shape)
 
     @classmethod

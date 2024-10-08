@@ -51,6 +51,11 @@ class Converter:
         # Custom Qualia layers
         layers.TAddLayer: 'add',
         layers.TSumLayer: 'sum', # Global Sum Pooling
+
+        # Custom BrainMIX layer
+        layers.TConcatenateLayer: 'concatenate',
+        layers.TSampleNormLayer: 'samplenorm',
+        layers.TSliceLayer: 'slice',
     }
 
     TEMPLATE_PATH = files('qualia_codegen_core.assets')

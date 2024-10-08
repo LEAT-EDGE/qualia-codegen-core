@@ -6,10 +6,9 @@ default:
   before_script:
     - pacman-key --init
     - pacman -Sy --noconfirm archlinux-keyring
-    - pacman -Syu --noconfirm --needed python-pytorch python-tensorflow python-pip python-numpy python-jinja python-graphviz
+    - pacman -Syu --noconfirm --needed python-keras  python-pytorch python-tensorflow python-pip python-numpy python-jinja python-graphviz
     - pacman -S --noconfirm --needed python-pytest python-pytest-dependency python-pytest-xdist python-pytest-env
     - pacman -S --noconfirm --needed python-ruff mypy git
-    - pip install --break-system-packages -U keras
     - pip install --break-system-packages types-tensorflow
 
 stages:          # List of stages for jobs, and their order of execution
@@ -51,8 +50,7 @@ doc-job:
     - pacman -Sy --noconfirm archlinux-keyring
     - pacman -Syu --noconfirm --needed rclone make git
     - pacman -S --noconfirm --needed python-sphinx python-sphinx-autodoc-typehints python-sphinx_rtd_theme python-myst-parser
-    - pacman -S --noconfirm --needed python-pdm python-numpy python-pytorch python-tensorflow python-pip
-    - pip install --break-system-packages -U keras
+    - pacman -S --noconfirm --needed python-pdm python-numpy python-keras python-pytorch python-tensorflow python-pip
   script:
     - make -C docs html
     - read RCLONE_SFTP_PASS < <(rclone obscure - < ${GITLAB_LDAP_PASSWORD}) && export RCLONE_SFTP_PASS
