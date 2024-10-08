@@ -1,6 +1,6 @@
 set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/model" CACHE PATH "Path to generated C model")
 set(WITH_CMSIS_NN False CACHE BOOL "Use CMSIS-NN library for optimizations")
-set(CMSIS_NN_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/cmsis/CMSIS/NN" CACHE PATH "Path to CMSIS-NN library sources")
+set(CMSIS_NN_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../qualia_codegen_core/examples/third_party/cmsis/CMSIS/NN" CACHE PATH "Path to CMSIS-NN library sources")
 
 set(LIBQUALIA_NEURALNETWORK_CFLAGS
   -Ofast)
