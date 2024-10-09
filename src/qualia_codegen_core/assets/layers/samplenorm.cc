@@ -14,7 +14,6 @@
 
 #define INPUT_CHANNELS {{ node.input_shape[0][-1] }}
 #define MODE_{{ node.layer.mode.name | upper }}
-#define TMP_SCALE_FACTOR {{ [node.q.weights_scale_factor, node.q.bias_scale_factor] | max if node.q.bias_scale_factor is not none else node.q.weights_scale_factor }}
 #define INPUT_SCALE_FACTOR {{ node.innodes[0].q.output_scale_factor }}
 #define OUTPUT_SCALE_FACTOR {{ node.q.output_scale_factor }}
 #define OUTPUT_ROUND_MODE ROUND_MODE_{{ node.q.output_round_mode | upper }}
@@ -47,7 +46,7 @@ static inline void {{ node.layer.name }}(
     }
 {% endfor %}
 
-  max -= min;
+    max -= min;
 
     // Normalize
 {% for dim in node.input_shape[0][1:-1] %}
@@ -75,7 +74,6 @@ static inline void {{ node.layer.name }}(
 
 #undef INPUT_CHANNELS
 #undef MODE_{{ node.layer.mode.name | upper }}
-#undef TMP_SCALE_FACTOR
 #undef INPUT_SCALE_FACTOR
 #undef OUTPUT_SCALE_FACTOR
 #undef OUTPUT_ROUND_MODE
