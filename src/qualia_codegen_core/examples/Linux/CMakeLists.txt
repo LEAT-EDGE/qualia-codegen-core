@@ -39,7 +39,7 @@ set(Linux_CFLAGS
   "-fdata-sections"
   "-ffunction-sections"
   "-fgraphite-identity"
-  "-floop-nest-optimize"
+#  "-floop-nest-optimize" # Broken with libisl 0.27 since 6dff4a1e274881b3b9b3077fd0624c8fb74136f9
   "-floop-parallelize-all"
 
   "-fsanitize=signed-integer-overflow"
