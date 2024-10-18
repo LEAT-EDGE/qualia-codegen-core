@@ -48,7 +48,7 @@ UART_HandleTypeDef huart3;
 DMA_HandleTypeDef handle_GPDMA1_Channel12;
 
 /* USER CODE BEGIN PV */
-static char receive_buff[MAX_READ_SIZE] = {'\0'};                //Define the receive array
+volatile __attribute__((section("noncacheable_buffer"))) static char receive_buff[MAX_READ_SIZE] = {'\0'};                //Define the receive array
 volatile uint16_t receive_buff_cnt = 0;
 static char send_msg[32] = "READY\r\n";
 /* USER CODE END PV */
@@ -137,13 +137,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    size_t len;
-    len = snprintf(send_msg, sizeof(send_msg), "%d\n", receive_buff_cnt);
-    HAL_UART_Transmit(&huart3, (unsigned char *)send_msg, len, 0x200);
-
     if (receive_buff_cnt > 0 && receive_buff[receive_buff_cnt - 1] == '\n') {
       float *inputs = serialBufToFloats(receive_buff, receive_buff_cnt);
-      len = snprintf(send_msg, 32, "%d\r\n", receive_buff_cnt);
+      size_t len = snprintf(send_msg, 32, "%d\r\n", receive_buff_cnt);
       receive_buff_cnt = 0;
       HAL_UARTEx_ReceiveToIdle_DMA(&huart3, (uint8_t*)receive_buff, MAX_READ_SIZE);
 
@@ -330,30 +326,15 @@ static void MPU_Config(void)
   */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress = 0x0;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
-  MPU_InitStruct.SubRegionDisable = 0x87;
+  MPU_InitStruct.BaseAddress = 0x2404C000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_16KB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
   MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
   MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
   MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Number = MPU_REGION_NUMBER1;
-  MPU_InitStruct.BaseAddress = 0x70000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_128MB;
-  MPU_InitStruct.SubRegionDisable = 0x0;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
-  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
   /* Enables the MPU */
