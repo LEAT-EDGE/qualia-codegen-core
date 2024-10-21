@@ -1,0 +1,11 @@
+	
+
+
+
+# default action: build all
+all:	
+	bash "../postbuild.sh" "${cubeide_cubeprogrammer_path}/ExternalLoader" 
+
+
+
+# *** EOF ***
