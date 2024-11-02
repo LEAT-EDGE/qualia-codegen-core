@@ -20,7 +20,7 @@ stages:          # List of stages for jobs, and their order of execution
 check-job:
   stage: check
   script:
-    - pip install --break-system-packages -e .[tests,pytorch,tensorflow,lint,typecheck]
+    - pip install --break-system-packages -e .[tests,pytorch,lint,typecheck]
     - ruff check src || ((exit_code|=$?))
     - mypy || ((exit_code|=$?))
     - $(exit $exit_code)
