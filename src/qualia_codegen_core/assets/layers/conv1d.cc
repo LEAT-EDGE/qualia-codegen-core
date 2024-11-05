@@ -159,7 +159,7 @@ static inline void {{ node.layer.name }}(
 
 {% elif qtype2ctype(node.q.number_type, node.q.width) == 'int16_t' %}
   static q15_t bufferA[2*INPUT_CHANNELS*CONV_KERNEL_SIZE];
-#if INPUT_CHANNELS % 2 == 0 && CONV_FILTERS % 2 == 0
+#if INPUT_CHANNELS % 2 == 0 && CONV_FILTERS % 2 == 0 && CONV_OUTSAMPLES % 2 == 0
 #ifdef WITH_CMSIS_NN
   arm_convolve_HWC_q15_fast_nonsquare(
 #elif defined(WITH_NMSIS_NN)
