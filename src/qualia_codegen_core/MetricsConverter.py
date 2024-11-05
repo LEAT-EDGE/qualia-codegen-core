@@ -14,6 +14,7 @@ class MetricsConverter(Converter):
         'corr': 'PearsonCorrelationCoefficient',
         'mae': 'MeanAbsoluteError',
         'mse': 'MeanSquaredError',
+        'slope': 'Slope',
     }
 
     def write_metrics_header(self, metrics: list[str]) -> str:
