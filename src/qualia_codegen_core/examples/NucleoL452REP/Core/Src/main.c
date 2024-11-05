@@ -80,6 +80,26 @@ void RxEventCallback(UART_HandleTypeDef *huart, uint16_t Pos) {
     }
   }
 }
+
+/**
+  * @brief  Function called to read the current micro second
+  * @param  None
+  * @retval None
+  */
+uint32_t getCurrentMicros(void)
+{
+  uint32_t m0 = HAL_GetTick();
+  __IO uint32_t u0 = SysTick->VAL;
+  uint32_t m1 = HAL_GetTick();
+  __IO uint32_t u1 = SysTick->VAL;
+  const uint32_t tms = SysTick->LOAD + 1;
+
+  if (m1 != m0) {
+    return (m1 * 1000 + ((tms - u1) * 1000) / tms);
+  } else {
+    return (m0 * 1000 + ((tms - u0) * 1000) / tms);
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -130,9 +150,11 @@ int main(void)
 
       HAL_UART_Transmit(&huart2, (unsigned char *)send_msg, len, 0x200);
 
+      uint32_t start = getCurrentMicros();
       struct NNResult res = neuralNetworkInfer(inputs);
+      uint32_t stop = getCurrentMicros();
 
-      len = snprintf(send_msg, 32, "%d,%d,%f\r\n", res.inference_count, res.label, (double)res.dist);
+      len = snprintf(send_msg, 32, "%d,%d,%f,%d\r\n", res.inference_count, res.label, (double)res.dist, stop - start);
       HAL_UART_Transmit(&huart2, (unsigned char *)send_msg, len, 0x200);
     }
     /* USER CODE END WHILE */
