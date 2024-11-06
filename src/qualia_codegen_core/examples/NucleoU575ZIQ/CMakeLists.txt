@@ -104,6 +104,7 @@ add_executable(${PROJECT_NAME}
   Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr_ex.c
   Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c
   Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_exti.c
+  Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_dcache.c
   Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_icache.c
   Core/Src/system_stm32u5xx.c
   startup_stm32u575xx.s

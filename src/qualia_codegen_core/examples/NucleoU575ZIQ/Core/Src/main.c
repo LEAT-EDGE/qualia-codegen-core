@@ -44,6 +44,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+DCACHE_HandleTypeDef hdcache1;
+
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef handle_GPDMA1_Channel12;
 
@@ -60,6 +62,7 @@ static void MX_GPIO_Init(void);
 static void MX_GPDMA1_Init(void);
 static void MX_ICACHE_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_DCACHE1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -140,6 +143,7 @@ int main(void)
   MX_GPDMA1_Init();
   MX_ICACHE_Init();
   MX_USART1_UART_Init();
+  MX_DCACHE1_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_RegisterRxEventCallback(&huart1, RxEventCallback);
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, (uint8_t*)receive_buff, MAX_READ_SIZE);
@@ -248,6 +252,33 @@ static void SystemPower_Config(void)
   }
 /* USER CODE BEGIN PWR */
 /* USER CODE END PWR */
+}
+
+/**
+  * @brief DCACHE1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_DCACHE1_Init(void)
+{
+
+  /* USER CODE BEGIN DCACHE1_Init 0 */
+
+  /* USER CODE END DCACHE1_Init 0 */
+
+  /* USER CODE BEGIN DCACHE1_Init 1 */
+
+  /* USER CODE END DCACHE1_Init 1 */
+  hdcache1.Instance = DCACHE1;
+  hdcache1.Init.ReadBurstType = DCACHE_READ_BURST_WRAP;
+  if (HAL_DCACHE_Init(&hdcache1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN DCACHE1_Init 2 */
+
+  /* USER CODE END DCACHE1_Init 2 */
+
 }
 
 /**
