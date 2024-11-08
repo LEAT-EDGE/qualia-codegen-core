@@ -7,7 +7,7 @@
 **  Author		: STM32CubeMX
 **
 **  Abstract    : Linker script for STM32L452RETxP series
-**                512Kbytes FLASH and 192Kbytes RAM
+**                512Kbytes FLASH and 160Kbytes RAM
 **
 **                Set heap size, stack size and stack location according
 **                to application requirements.
@@ -61,7 +61,7 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 160K
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
 RAM2 (xrw)      : ORIGIN = 0x10000000, LENGTH = 32K
 FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 512K
 }
@@ -95,7 +95,7 @@ SECTIONS
   } >FLASH
 
   /* Constant data goes into FLASH */
-  .rodata : ALIGN(CONSTANT(COMMONPAGESIZE))
+  .rodata :
   {
     . = ALIGN(8);
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
@@ -198,7 +198,6 @@ SECTIONS
     libgcc.a ( * )
   }
 
-  .ARM.attributes 0 : { *(.ARM.attributes) }
 }
 
 

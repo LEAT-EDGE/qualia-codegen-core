@@ -67,6 +67,8 @@ set(NucleoL452REP_CFLAGS
   "-Ofast"
 )
 
+set(CORE_CLOCK_48MHZ False CACHE BOOL "Set core frequency to 48MHz instead of 80MHz")
+
 add_compile_options(
   ${NucleoL452REP_CFLAGS}
 )
@@ -126,3 +128,8 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
   "STM32L452xx"
 )
 
+if(CORE_CLOCK_48MHZ)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE
+    "CORE_CLOCK_48MHZ"
+  )
+endif()
