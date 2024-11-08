@@ -67,6 +67,8 @@ set(NucleoH7S3L8_CFLAGS
   "-Ofast"
 )
 
+set(ROM_IN_SRAM False CACHE BOOL "Store ROM code and data in SRAM and execute from SRAM")
+
 add_compile_options(
   ${NucleoH7S3L8_CFLAGS}
 )
@@ -75,10 +77,19 @@ add_link_options(
   ${NucleoH7S3L8_CFLAGS}
 
   "-specs=nosys.specs"
-  "-T" "${CMAKE_CURRENT_SOURCE_DIR}/Makefile/Boot/stm32h7s3xx_flash.ld"
   "-z" "separate-code"
   "-Wl,--print-memory-usage"
 )
+
+if(ROM_IN_SRAM)
+  add_link_options(
+    "-T" "${CMAKE_CURRENT_SOURCE_DIR}/Makefile/Boot/stm32h7s3xx_sram.ld"
+  )
+else()
+  add_link_options(
+    "-T" "${CMAKE_CURRENT_SOURCE_DIR}/Makefile/Boot/stm32h7s3xx_flash.ld"
+  )
+endif()
 
 add_subdirectory(${LIBQUALIA_NEURALNETWORK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/libqualia-neuralnetwork)
 

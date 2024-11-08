@@ -37,8 +37,8 @@ __FLASH_BEGIN  = 0x24050000;
 __FLASH_SIZE   = 0x00022000;
 
 __RAM_BEGIN    = 0x24000000;
-__RAM_SIZE     = 0x50000;
-__RAM_NONCACHEABLEBUFFER_SIZE = 0x400;
+__RAM_SIZE     = 0x4C000;
+__RAM_NONCACHEABLEBUFFER_SIZE = 0x4000;
 
 /* Highest address of the user mode stack */
 _estack = ORIGIN(DTCM) + LENGTH(DTCM); /* end of "DTCM" Ram type memory */
