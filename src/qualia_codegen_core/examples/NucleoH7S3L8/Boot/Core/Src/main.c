@@ -205,7 +205,11 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL1.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL1.PLLM = 32;
+#ifdef CORE_CLOCK_740MHZ
+  RCC_OscInitStruct.PLL1.PLLN = 370;
+#else
   RCC_OscInitStruct.PLL1.PLLN = 300;
+#endif
   RCC_OscInitStruct.PLL1.PLLP = 1;
   RCC_OscInitStruct.PLL1.PLLQ = 2;
   RCC_OscInitStruct.PLL1.PLLR = 2;

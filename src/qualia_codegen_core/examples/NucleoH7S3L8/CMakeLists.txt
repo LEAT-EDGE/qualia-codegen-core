@@ -68,6 +68,7 @@ set(NucleoH7S3L8_CFLAGS
 )
 
 set(ROM_IN_SRAM False CACHE BOOL "Store ROM code and data in SRAM and execute from SRAM")
+set(CORE_CLOCK_740MHZ False CACHE BOOL "Overclock core frequency to 740MHz instead of 600MHz")
 
 add_compile_options(
   ${NucleoH7S3L8_CFLAGS}
@@ -134,3 +135,8 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
   "STM32H7S3xx"
 )
 
+if(CORE_CLOCK_740MHZ)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE
+    "CORE_CLOCK_740MHZ"
+  )
+endif()
