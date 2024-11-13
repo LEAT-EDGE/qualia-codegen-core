@@ -215,7 +215,7 @@ class TorchModelGraph(ModelGraph):
         tracer = TorchModelGraph.TracerCustomLayers(custom_layers=tuple(custom_layers.keys()))
         graph = tracer.trace(self._model)
         logger.info('Torch FX graph:')
-        graph.print_tabular()
+        graph.print_tabular()  # type: ignore[no-untyped-call]
 
         for layer in graph.nodes:
             conv = self.__convert(layer)
