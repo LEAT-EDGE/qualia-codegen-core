@@ -118,7 +118,7 @@ class Converter:
     def render_template(self,
                         name: str,
                         out: Path,
-                        **kwargs: Any) -> str: # noqa: ANN401 We really want to be able to pass anything to the rendered template
+                        **kwargs: Any) -> str:  # noqa: ANN401 # We really want to be able to pass anything to the rendered template
         if self._template_path is None:
             return ''
 

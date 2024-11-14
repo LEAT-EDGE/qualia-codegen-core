@@ -188,7 +188,7 @@ def qualia_codegen(filename: str,
     return fullmodel_h
 
 def main() -> int:
-    if len(sys.argv) < 2: # noqa: PLR2004 Only required arg is weights file
+    if len(sys.argv) < 2:  # noqa: PLR2004 # Only required arg is weights file
         logger.error('Usage: %s <weights_file>'
                      ' [quantization] [activations_range_file] [pytorch_module_name] [pytorch_module_args]', sys.argv[0])
         sys.exit(1)
