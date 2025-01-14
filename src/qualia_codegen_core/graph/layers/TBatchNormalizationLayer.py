@@ -10,9 +10,9 @@ from qualia_codegen_core.typing import TYPE_CHECKING, NDArrayFloatOrInt
 from .TBaseLayer import TBaseLayer
 
 if TYPE_CHECKING:
-    from collections import OrderedDict  # noqa: TCH003
+    from collections import OrderedDict  # noqa: TC003
 
-    from .TActivationLayer import TActivation  # noqa: TCH001
+    from .TActivationLayer import TActivation  # noqa: TC001
 
 if sys.version_info >= (3, 12):
     from typing import override
