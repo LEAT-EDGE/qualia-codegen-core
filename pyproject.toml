@@ -60,6 +60,9 @@ target-version = "py39"
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
 
+[tool.ruff.lint.flake8-builtins]
+builtins-allowed-modules = ["typing"]
+
 [tool.mypy]
 files = ["src"]
 exclude = ["third_party", "examples", "libqualia-neuralnetwork"]
