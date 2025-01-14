@@ -49,8 +49,6 @@ extend-exclude = ["third_party"]
 lint.select = ["ALL"]
 #select = ["E", "F", "B"]
 lint.ignore = [
-  "ANN101", # Ignore missing type annotation for self in methods
-  "ANN102", # Ignore missing type annotation for self in class methods
   "D1", # Ignore missing pydoc
   "N999", # Our module have the same name as the contained class in PascalCase
   "D203", # Prefer D211
