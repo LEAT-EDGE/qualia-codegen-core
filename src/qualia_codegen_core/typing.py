@@ -22,11 +22,11 @@ class DTypes(tuple[numpy.typing.DTypeLike, ...]):
     __slots__ = ()
 
 __all__ = [
-        'TYPE_CHECKING',
-        'TBits',
-        'NDArrayFloatOrInt',
-        'Shape',
-        'ShapeOptional',
-        'Shapes',
-        'DTypes',
-        ]
+    'TYPE_CHECKING',
+    'DTypes',
+    'NDArrayFloatOrInt',
+    'Shape',
+    'ShapeOptional',
+    'Shapes',
+    'TBits',
+]
