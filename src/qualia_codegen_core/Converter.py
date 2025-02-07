@@ -251,7 +251,7 @@ class Converter:
         return True
 
     def generate_code(self, modelgraph: ModelGraph,
-                      allocation: dict[str, list[list[LayerNode]] | dict[LayerNode, int]]) -> str | None:
+                      allocation: dict[str, list[list[LayerNode]] | dict[LayerNode, int]]) -> str:
         # Used to ignore includes in generated files for combined returned code
         rendered = '#define SINGLE_FILE\n'
 
@@ -279,27 +279,27 @@ class Converter:
         return rendered
 
 
-    def convert_model(self, modelgraph: ModelGraph) -> str | None:
+    def convert_model(self, modelgraph: ModelGraph) -> str | bool:
         if self._template_path is None:
             logger.error('Could not discover template path from module')
-            return None
+            return False
 
         final_modelgraph = self.preprocess_modelgraph(modelgraph)
         if final_modelgraph is None:
             logger.error('Could not preprocess ModelGraph')
-            return None
+            return False
 
         if not self.validate_modelgraph(final_modelgraph):
             logger.error('ModelGraph validation failed')
-            return None
+            return False
 
         if not self.quantize_modelgraph(final_modelgraph):
-            return None
+            return False
 
         allocator = Allocator()
         allocation = allocator(modelgraph)
         if not allocation:
             logger.error('Allocation failed')
-            return None
+            return False
 
         return self.generate_code(final_modelgraph, allocation)
