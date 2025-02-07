@@ -144,7 +144,7 @@ def qualia_codegen(filename: str,
                quantize: str = 'float32',
                activations_range_file: str = '',
                module_name: str = '', # PyTorch module name
-               *args: str) -> str | None: # PyTorch module args
+               *args: str) -> str | bool: # PyTorch module args
     filepath = Path(filename)
     fname = filepath.stem
 
@@ -164,24 +164,24 @@ def qualia_codegen(filename: str,
         long_width = 16
     else:
         logger.error('Qualia-CodeGen only supports no (float32) quantization, int8 or int16 quantization, got %s', quantize)
-        return None
+        return False
 
     modelgraph = load_modelgraph(filepath, module_name, *args)
     if not modelgraph:
-        return None
+        return False
 
     activations_range = ActivationsRange()
     if activations_range_file:
         activations_range = activations_range.load(Path(activations_range_file), input_layer_name=modelgraph.nodes[0].layer.name)
 
     if not annotate_quantization(modelgraph, activations_range, number_type, width, long_width):
-        return None
+        return False
 
     converter = Converter(output_path=Path('out')/'qualia_codegen'/fname)
 
     fullmodel_h = converter.convert_model(modelgraph)
 
-    if fullmodel_h:
+    if isinstance(fullmodel_h, str):
         with (Path('out')/'qualia_codegen'/fname/'full_model.h').open('w') as f:
             _ = f.write(fullmodel_h)
 
@@ -195,7 +195,7 @@ def main() -> int:
 
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-    return 0 if qualia_codegen(*sys.argv[1:]) is not None else 1
+    return 0 if qualia_codegen(*sys.argv[1:]) else 1
 
 if __name__ == '__main__':
     sys.exit(main())
