@@ -50,6 +50,17 @@ float *serialBufToFloats(char buf[], size_t buflen) {
   return input;
 }
 
+void stringToFloatArray(float floats[], size_t floatslen, char string[], size_t stringlen) {
+  auto *pbuf = string;
+
+  unsigned int i = 0;
+  while ((pbuf - string) < (int)stringlen && *pbuf != '\r' && *pbuf != '\n' && i < floatslen) {
+    floats[i] = strtof(pbuf, &pbuf);
+    i++;
+    pbuf++;//skip delimiter
+  }
+}
+
 float round_with_mode(float v, round_mode_t round_mode) {
 	if (round_mode == ROUND_MODE_FLOOR) {
 		return floorf(v);

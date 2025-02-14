@@ -19,6 +19,7 @@ struct NNResult {
 
 extern unsigned int inference_count;
 float *serialBufToFloats(char buf[], size_t buflen);
+void stringToFloatArray(float floats[], size_t floatslen, char string[], size_t stringlen);
 float round_with_mode(float v, round_mode_t round_mode);
 struct NNResult neuralNetworkInfer(const float input[]);
 void neuralNetworkRun(const float input[], output_t output);
