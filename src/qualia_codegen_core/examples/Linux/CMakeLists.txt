@@ -49,6 +49,13 @@ set(Linux_CFLAGS
   "-fdiagnostics-color=always"
 )
 
+# No sanitizer library on Windows so just generate trap
+if(WIN32)
+  LIST(APPEND Linux_CFLAGS
+    "-fsanitize-trap=all"
+  )
+endif()
+
 add_compile_options(
   ${Linux_CFLAGS}
 )
