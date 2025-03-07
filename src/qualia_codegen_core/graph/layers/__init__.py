@@ -23,6 +23,7 @@ from .TPermuteLayer import TPermuteLayer
 from .TSampleNormLayer import TSampleNormLayer
 from .TSliceLayer import TSliceLayer
 from .TSumLayer import TSumLayer
+from .TUpsampleLayer import TUpsampleLayer
 from .TZeroPadding1DLayer import TZeroPadding1DLayer
 from .TZeroPadding2DLayer import TZeroPadding2DLayer
 from .TZeroPaddingLayer import TZeroPaddingLayer
@@ -53,6 +54,7 @@ layers_t = {
     'TSampleNormLayer': TSampleNormLayer,
     'TSliceLayer': TSliceLayer,
     'TSumLayer': TSumLayer,
+    'TUpsampleLayer': TUpsampleLayer,
     'TZeroPadding1DLayer': TZeroPadding1DLayer,
     'TZeroPadding2DLayer': TZeroPadding2DLayer,
     'TZeroPaddingLayer': TZeroPaddingLayer,
@@ -84,6 +86,7 @@ __all__ = [
         'TSampleNormLayer',
         'TSliceLayer',
         'TSumLayer',
+        'TUpsampleLayer',
         'TZeroPadding1DLayer',
         'TZeroPadding2DLayer',
         'TZeroPaddingLayer',
