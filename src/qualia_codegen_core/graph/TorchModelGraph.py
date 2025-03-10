@@ -152,10 +152,14 @@ class TorchModelGraph(ModelGraph):
                                               cast(Linear, module).bias.detach().numpy()]),
         Dropout: lambda module, _: (TDropoutLayer, [cast(Dropout, module).p]),
         Identity: lambda *_: (TIdentityLayer, []),
-        Upsample: lambda module, args: (TUpsampleLayer, [tuple(int(s) for s in cast(Upsample, module).scale_factor)
-                                                            if isinstance(module.scale_factor, Iterable)
-                                                            else (int(module.scale_factor), ) * (len(args.input_shape[0]) - 2),
-                                                         TUpsampleMode(cast(Upsample, module).mode)]),
+        Upsample: lambda module, args: (TUpsampleLayer,
+                                        [(tuple(int(s) for s in module.scale_factor)
+                                          if isinstance(module.scale_factor, Iterable) # Iterable containing all dimensions
+                                          else (int(module.scale_factor), ) * (len(args.input_shape[0]) - 2)
+                                          if module.scale_factor is not None # Single scalar for all dimensions
+                                          else None # scale_factor not defined
+                                          ) if isinstance(module, Upsample) else None,
+                                         TUpsampleMode(cast(Upsample, module).mode)]),
     }
 
     METHOD_MAPPING: ClassVar[dict[str, Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
