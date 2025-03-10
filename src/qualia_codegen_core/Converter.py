@@ -61,7 +61,9 @@ class Converter:
 
     TEMPLATE_PATH = files('qualia_codegen_core.assets')
 
-    def __init__(self, output_path: Path | None = None) -> None:
+    def __init__(self,
+                 output_path: Path | None = None,
+                 dump_featuremaps: bool = False) -> None:  # noqa: FBT001, FBT002
         super().__init__()
 
         self.validator = Validator()
@@ -71,6 +73,8 @@ class Converter:
             self.output_path = output_path
             self.output_path_header = output_path / 'include'
             self.output_path_weights = output_path / 'weights'
+            # Feature maps are written when calling the binary, not when generating code, so working directory might be different
+            self.output_path_featuremaps = output_path / 'featuremaps'
 
             self.output_path.mkdir(parents=True, exist_ok=True)
             self.output_path_header.mkdir(parents=True, exist_ok=True)
@@ -83,6 +87,8 @@ class Converter:
             self.output_path_weights = Path()
 
             self.write_file = False
+
+        self.dump_featuremaps = dump_featuremaps
 
         self.number_types = {NumberType(int, 32, 64, -(2 ** (32 - 1)), 2 ** (32 - 1) - 1)}
 
@@ -141,7 +147,9 @@ class Converter:
                     allocation: dict[str, list[list[LayerNode]] | dict[LayerNode, int]] | None) -> str:
         return self.render_template('model.cc', self.output_path / 'model.c', nodes=modelgraph.nodes,
                                     allocation=allocation,
-                                    qtype2ctype=self.dataconverter.qtype2ctype)
+                                    qtype2ctype=self.dataconverter.qtype2ctype,
+                                    dump_featuremaps=self.dump_featuremaps,
+                                    dump_featuremaps_path=self.output_path_featuremaps)
 
     def write_numeric_header(self) -> str:
         return self.render_template('include/number.hh', self.output_path_header / 'number.h',

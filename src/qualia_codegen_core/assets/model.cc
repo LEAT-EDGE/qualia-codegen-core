@@ -1,3 +1,5 @@
+{% import 'dump_featuremaps.cc' as featuremaps %}
+
 /**
   ******************************************************************************
   * @file    model.cc
@@ -15,6 +17,9 @@ extern "C" {
 #include "number.h"
 #include "model.h"
 // #include <chrono>
+{% if dump_featuremaps %}
+  {{ featuremaps.includes() }}
+{% endif -%}
 
 {% for node in nodes[1:] %} // InputLayer is excluded
 #include "{{ node.layer.name }}.c"
@@ -23,6 +28,10 @@ extern "C" {
   {%- endif %}
 {%- endfor %}
 #endif
+
+{% if dump_featuremaps %}
+static int sample = 0; // Track current sample
+{% endif -%}
 
 
 void cnn(
@@ -37,6 +46,15 @@ void cnn(
   {%- endfor %}
   } activations{{ loop.index }};
 {% endfor %}
+
+{% if dump_featuremaps %}
+  char path[FILENAME_MAX] = { '\0' };
+  // Prepare output file name
+  snprintf(path, FILENAME_MAX, "{{ dump_featuremaps_path }}/%d/{{ nodes[0].layer.name }}.csv", sample);
+
+  // Input
+  {{ featuremaps.write(nodes, allocation, nodes[0]) }}
+{% endif -%}
 
 // Model layers call chain {# InputLayer is excluded #}
 {%- for node in nodes[1:] -%}  
@@ -83,7 +101,17 @@ void cnn(
     {{ node.layer.name }}_output
     {% endif -%}
   );
+
+  {% if dump_featuremaps %}
+  // Prepare output file name
+  snprintf(path, FILENAME_MAX, "{{ dump_featuremaps_path }}/%d/{{ node.layer.name }}.csv", sample);
+  {{ featuremaps.write(nodes, allocation, node) }}
+  {% endif -%}
 {%- endfor %}
+
+{% if dump_featuremaps %}
+  sample++; // Increment sample count
+{% endif -%}
 }
 
 #ifdef __cplusplus
