@@ -51,7 +51,7 @@ static inline void {{ node.layer.name }}(
   for (y = 0; y < OUTPUT_HEIGHT; y++) {
     for (x = 0; x < OUTPUT_WIDTH; x++) {
       for (k = 0; k < INPUT_CHANNELS; k++) {
-        output[y][x][k] += input[y / UPSAMPLE_SCALE_HEIGHT][x / UPSAMPLE_SCALE_WIDTH][k];
+        output[y][x][k] = input[y / UPSAMPLE_SCALE_HEIGHT][x / UPSAMPLE_SCALE_WIDTH][k];
       }
     }
   }
