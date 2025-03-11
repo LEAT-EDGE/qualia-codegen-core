@@ -13,6 +13,7 @@ class MetricsConverter(Converter):
         'acc': 'Accuracy',
         'corr': 'PearsonCorrelationCoefficient',
         'mae': 'MeanAbsoluteError',
+        'mape': 'MeanAbsolutePercentageError',
         'mse': 'MeanSquaredError',
         'slope': 'Slope',
     }
