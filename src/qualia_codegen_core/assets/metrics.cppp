@@ -10,10 +10,10 @@
 {% endfor %}
 
 {% for metric in metrics %}
-static {{ metric }}<std::remove_all_extents<output_t>::type, MODEL_OUTPUT_SAMPLES> metric_{{ loop.index }};
+static {{ metric }}<metric_return_t, MODEL_OUTPUT_SAMPLES> metric_{{ loop.index }};
 {% endfor %}
 
-std::array<Metric<std::remove_all_extents<output_t>::type, MODEL_OUTPUT_SAMPLES>*, {{ metrics | length }}> metrics {
+std::array<Metric<metric_return_t, MODEL_OUTPUT_SAMPLES>*, {{ metrics | length }}> metrics {
 {% for metric in metrics %}
   &metric_{{ loop.index }},
 {% endfor %}
