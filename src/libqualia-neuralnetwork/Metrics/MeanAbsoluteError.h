@@ -32,7 +32,7 @@ public:
       this->absolute_error -= error;
     }
 
-    this->count++;
+    this->count += N;
   }
 
   metric_return_t compute() {
