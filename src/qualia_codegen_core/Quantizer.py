@@ -8,7 +8,7 @@ from qualia_codegen_core.graph.RoundMode import RoundMode
 from qualia_codegen_core.typing import TYPE_CHECKING, NDArrayFloatOrInt
 
 if TYPE_CHECKING:
-    from .graph.LayerNode import LayerNode  # noqa: TC001
+    from .graph.LayerNode import LayerNode
 
 logger = logging.getLogger(__name__)
 

@@ -5,7 +5,7 @@ from typing import Any, Optional, TypeVar, Union
 import numpy as np
 import numpy.typing
 
-TYPE_CHECKING = typing.TYPE_CHECKING or os.environ.get('SPHINX_AUTODOC', False)
+TYPE_CHECKING = typing.TYPE_CHECKING or os.environ.get('SPHINX_AUTODOC', None)
 TBits = TypeVar('TBits', bound=numpy.typing.NBitBase)
 NDArrayFloatOrInt = Union[numpy.typing.NDArray[np.floating[Any]], numpy.typing.NDArray[np.integer[Any]]]
 

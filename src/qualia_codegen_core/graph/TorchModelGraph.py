@@ -89,9 +89,9 @@ class TorchModelGraph(ModelGraph):
                                                                      if isinstance(module, BatchNorm1d)
                                                                      and module.running_var is not None
                                                                      else None,
-                                                                     cast(BatchNorm1d, module).weight.detach().numpy(),
-                                                                     cast(BatchNorm1d, module).bias.detach().numpy(),
-                                                                     cast(BatchNorm1d, module).eps]),
+                                                                     cast('BatchNorm1d', module).weight.detach().numpy(),
+                                                                     cast('BatchNorm1d', module).bias.detach().numpy(),
+                                                                     cast('BatchNorm1d', module).eps]),
         BatchNorm2d: lambda module, _: (TBatchNormalization2DLayer, [TActivation.LINEAR,
                                                                      module.running_mean.detach().numpy()
                                                                      if isinstance(module, BatchNorm2d)
@@ -101,56 +101,56 @@ class TorchModelGraph(ModelGraph):
                                                                      if isinstance(module, BatchNorm2d)
                                                                      and module.running_var is not None
                                                                      else None,
-                                                                     cast(BatchNorm2d, module).weight.detach().numpy(),
-                                                                     cast(BatchNorm2d, module).bias.detach().numpy(),
-                                                                     cast(BatchNorm2d, module).eps]),
+                                                                     cast('BatchNorm2d', module).weight.detach().numpy(),
+                                                                     cast('BatchNorm2d', module).bias.detach().numpy(),
+                                                                     cast('BatchNorm2d', module).eps]),
         Conv1d: lambda module, _: (TConv1DLayer, [TActivation.LINEAR,
-                                                  TorchModelGraph.transpose(cast(Conv1d, module).weight.detach().numpy()),
-                                                  cast(Conv1d, module).kernel_size,
-                                                  cast(Conv1d, module).stride,
-                                                  cast(Conv1d, module).out_channels,
-                                                  cast(Conv1d, module).bias is not None,
+                                                  TorchModelGraph.transpose(cast('Conv1d', module).weight.detach().numpy()),
+                                                  cast('Conv1d', module).kernel_size,
+                                                  cast('Conv1d', module).stride,
+                                                  cast('Conv1d', module).out_channels,
+                                                  cast('Conv1d', module).bias is not None,
                                                   module.bias.detach().numpy()
                                                       if isinstance(module, Conv1d) and module.bias is not None else None,
-                                                  cast(Conv1d, module).groups,
-                                                  list(cast(Conv1d, module).padding) * 2]),
+                                                  cast('Conv1d', module).groups,
+                                                  list(cast('Conv1d', module).padding) * 2]),
         Conv2d: lambda module, _: (TConv2DLayer, [TActivation.LINEAR,
-                                                  TorchModelGraph.transpose(cast(Conv2d, module).weight.detach().numpy()),
-                                                  cast(Conv2d, module).kernel_size,
-                                                  cast(Conv2d, module).stride,
-                                                  cast(Conv2d, module).out_channels,
-                                                  cast(Conv2d, module).bias is not None,
+                                                  TorchModelGraph.transpose(cast('Conv2d', module).weight.detach().numpy()),
+                                                  cast('Conv2d', module).kernel_size,
+                                                  cast('Conv2d', module).stride,
+                                                  cast('Conv2d', module).out_channels,
+                                                  cast('Conv2d', module).bias is not None,
                                                   module.bias.detach().numpy()
                                                       if isinstance(module, Conv2d) and module.bias is not None else None,
-                                                  cast(Conv2d, module).groups,
-                                                  ((cast(Conv2d, module).padding[0], ) * 2,
-                                                   (cast(Conv2d, module).padding[1], ) * 2)]),
+                                                  cast('Conv2d', module).groups,
+                                                  ((cast('Conv2d', module).padding[0], ) * 2,
+                                                   (cast('Conv2d', module).padding[1], ) * 2)]),
         ReLU: lambda *_: (TActivationLayer, [TActivation.RELU]),
         ReLU6: lambda *_: (TActivationLayer, [TActivation.RELU6]),
         MaxPool1d: lambda module, _: (TMaxPooling1DLayer, [TActivation.LINEAR,
-                                                           TorchModelGraph.array_or_scalar(cast(MaxPool1d, module).kernel_size),
-                                                           TorchModelGraph.array_or_scalar(cast(MaxPool1d, module).stride)]),
+                                                           TorchModelGraph.array_or_scalar(cast('MaxPool1d', module).kernel_size),
+                                                           TorchModelGraph.array_or_scalar(cast('MaxPool1d', module).stride)]),
         MaxPool2d: lambda module, _: (TMaxPooling2DLayer, [TActivation.LINEAR,
-                                                           TorchModelGraph.array_or_scalar(cast(MaxPool2d, module).kernel_size),
-                                                           TorchModelGraph.array_or_scalar(cast(MaxPool2d, module).stride)]),
+                                                           TorchModelGraph.array_or_scalar(cast('MaxPool2d', module).kernel_size),
+                                                           TorchModelGraph.array_or_scalar(cast('MaxPool2d', module).stride)]),
         AvgPool1d: lambda module, _: (TAvgPooling1DLayer, [TActivation.LINEAR,
-                                                           cast(AvgPool1d, module).kernel_size,
-                                                           cast(AvgPool1d, module).stride]),
+                                                           cast('AvgPool1d', module).kernel_size,
+                                                           cast('AvgPool1d', module).stride]),
         AvgPool2d: lambda module, _: (TAvgPooling2DLayer, [TActivation.LINEAR,
-                                                           cast(AvgPool2d, module).kernel_size,
-                                                           cast(AvgPool2d, module).stride]),
+                                                           cast('AvgPool2d', module).kernel_size,
+                                                           cast('AvgPool2d', module).stride]),
         AdaptiveAvgPool1d: lambda module, args: (TAvgPooling1DLayer,
                                                  [TActivation.LINEAR,
                                                   (args.input_shape[0][-2] // TorchModelGraph.array_or_scalar(
-                                                     cast(AdaptiveAvgPool1d, module).output_size)[0], ),
+                                                     cast('AdaptiveAvgPool1d', module).output_size)[0], ),
                                                   (args.input_shape[0][-2] // TorchModelGraph.array_or_scalar(
-                                                      cast(AdaptiveAvgPool1d, module).output_size)[0], )]),
+                                                      cast('AdaptiveAvgPool1d', module).output_size)[0], )]),
         Flatten: lambda *_: (TFlattenLayer, []),
         Linear: lambda module, _: (TDenseLayer, [TActivation.LINEAR,
-                                              cast(Linear, module).weight.detach().numpy(),
-                                              cast(Linear, module).out_features, True,
-                                              cast(Linear, module).bias.detach().numpy()]),
-        Dropout: lambda module, _: (TDropoutLayer, [cast(Dropout, module).p]),
+                                              cast('Linear', module).weight.detach().numpy(),
+                                              cast('Linear', module).out_features, True,
+                                              cast('Linear', module).bias.detach().numpy()]),
+        Dropout: lambda module, _: (TDropoutLayer, [cast('Dropout', module).p]),
         Identity: lambda *_: (TIdentityLayer, []),
         Upsample: lambda module, args: (TUpsampleLayer,
                                         [(tuple(int(s) for s in module.scale_factor)
@@ -159,7 +159,7 @@ class TorchModelGraph(ModelGraph):
                                           if module.scale_factor is not None # Single scalar for all dimensions
                                           else None # scale_factor not defined
                                           ) if isinstance(module, Upsample) else None,
-                                         TUpsampleMode(cast(Upsample, module).mode)]),
+                                         TUpsampleMode(cast('Upsample', module).mode)]),
     }
 
     METHOD_MAPPING: ClassVar[dict[str, Callable[..., tuple[type[TBaseLayer], list[Any]]]]] = {
@@ -321,7 +321,7 @@ class TorchModelGraph(ModelGraph):
         def get_dtypes(tensor: Tensor) -> Literal[False] | numpy.typing.DTypeLike:
             x = tensor.detach().numpy()
             if isinstance(x, np.ndarray): # No typing from torch.Tensor.numpy()
-                return cast(numpy.typing.DTypeLike, x.dtype)
+                return cast('numpy.typing.DTypeLike', x.dtype)
             logger.error('Return type of tensor.detach().numpy() should be a numpy.ndarray')
             return False
 
@@ -465,7 +465,7 @@ class TorchModelGraph(ModelGraph):
         # Extract function args which are Tensor (i.e., inputs) to get their shapes and filter out extra arguments
         # Assume result is of type Node which means a layer in the graph since that's what should generate Tensor.
         # Warning: not recursive, hopefully not a problem for a standalone function call
-        args_tensor = [cast(Node, ref) for ref, val in zip(layer.args, function_args) if isinstance(val, Tensor)]
+        args_tensor = [cast('Node', ref) for ref, val in zip(layer.args, function_args) if isinstance(val, Tensor)]
 
         # Handle multiple inputs, for a possible Concat layer, Add layer handled as well even though shape should be identical
         inputs_shape = self.__get_layer_output_shapes(args_tensor)

@@ -163,7 +163,7 @@ class ModelGraph:
         for node in self.nodes:
             for out in node.outnodes:
                 grph.edge(node.layer.name, out.layer.name)
-        return cast(str, grph.source)
+        return cast('str', grph.source)
 
     @classmethod
     def auto_detect(cls, obj: keras.Model | nn.Module) -> ModelGraph:

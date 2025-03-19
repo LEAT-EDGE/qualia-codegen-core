@@ -189,7 +189,7 @@ class Converter:
                 if not hasattr(innode.layer, 'activation'):
                     logger.error('Cannot fuse activation: "%s" does not have an activation attribute', innode.layer.name)
                     return None
-                innode.layer.activation = cast(TActivationLayer, relunode.layer).activation
+                innode.layer.activation = cast('TActivationLayer', relunode.layer).activation
                 innode.q.output_scale_factor = relunode.q.output_scale_factor
             modelgraph.delete_node(relunode)
         return modelgraph

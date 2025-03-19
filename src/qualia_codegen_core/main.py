@@ -16,7 +16,7 @@ from qualia_codegen_core.graph.RoundMode import RoundMode
 from qualia_codegen_core.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from qualia_codegen_core.graph.ActivationRange import ActivationRange  # noqa: TC001
+    from qualia_codegen_core.graph.ActivationRange import ActivationRange
 
 logger = logging.getLogger(__name__)
 

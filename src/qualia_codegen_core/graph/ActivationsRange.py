@@ -6,7 +6,7 @@ from .ActivationRange import ActivationRange
 from .RoundMode import RoundMode
 
 if TYPE_CHECKING:
-    from pathlib import Path  # noqa: TC003
+    from pathlib import Path
 
 class ActivationsRange(dict[str, ActivationRange]):
     def __int_or_none(self, s: str) -> int | None:

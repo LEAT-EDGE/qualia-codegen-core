@@ -56,8 +56,10 @@ from .ModelGraph import ModelGraph
 try:
     # Keras 3.x
     from keras.layers import InputLayer
-    from keras.src.ops.node import Node  # type: ignore[import-untyped]
     from keras.src.ops.numpy import GetItem  # type: ignore[import-untyped]
+
+    if TYPE_CHECKING:
+        from keras.src.ops.node import Node  # type: ignore[import-untyped]
 except ImportError:
     try:
         # Keras >= 2.13.1
@@ -65,8 +67,10 @@ except ImportError:
     except ImportError:
         # Keras < 2.13.0
         from keras.engine.input_layer import InputLayer  # type: ignore[import-untyped] # No stubs for keras package
-    from keras.src.engine.node import Node  # type: ignore[import-untyped]
     from keras.src.layers.core.tf_op_layer import SlicingOpLambda  # type: ignore[import-untyped] # No stubs for keras package
+
+    if TYPE_CHECKING:
+        from keras.src.engine.node import Node  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     import numpy.typing
@@ -293,28 +297,28 @@ class KerasModelGraph(ModelGraph):
         # Keras 3.x compatibility
         if not hasattr(layer, 'input_shape'):
             if isinstance(layer, InputLayer): # get_build_config() returns None for InputLayer
-                return cast(tuple[int, ...], layer.batch_shape)
+                return cast('tuple[int, ...]', layer.batch_shape)
             if hasattr(layer, 'get_build_config') and layer.get_build_config() is not None:
-                return cast(tuple[int, ...], layer.get_build_config()['input_shape'])
+                return cast('tuple[int, ...]', layer.get_build_config()['input_shape'])
             # Some operations do not have get_build_config() so try to use input tensor shape instead
-            return cast(tuple[int, ...], layer.input.shape)
-        return cast(tuple[int, ...], layer.input_shape)
+            return cast('tuple[int, ...]', layer.input.shape)
+        return cast('tuple[int, ...]', layer.input_shape)
 
     @classmethod
     def __get_output_shape(cls, layer: Layer) -> tuple[int, ...]:
         # Keras 3.x compatibility
         if not hasattr(layer, 'output_shape'):
             if isinstance(layer, InputLayer): # compute_output_shape not implemented for InputLayer
-                return cast(tuple[int, ...], layer.batch_shape)
+                return cast('tuple[int, ...]', layer.batch_shape)
             if hasattr(layer, 'compute_output_shape'):
-                return cast(tuple[int, ...], layer.compute_output_shape(cls.__get_input_shape(layer)))
+                return cast('tuple[int, ...]', layer.compute_output_shape(cls.__get_input_shape(layer)))
             # Some operations do not have compute_output_shape() so try to use input tensor shape instead
-            return cast(tuple[int, ...], layer.output.shape)
-        return cast(tuple[int, ...], layer.output_shape)
+            return cast('tuple[int, ...]', layer.output.shape)
+        return cast('tuple[int, ...]', layer.output_shape)
 
     @classmethod
     def __get_inbound_nodes(cls, layer: Layer) -> list[Node]:
         if hasattr(layer, 'inbound_nodes'):
-            return cast(list[Node], layer.inbound_nodes)
+            return cast('list[Node]', layer.inbound_nodes)
         # Keras 3.x compatibility, no public API
         return [n for inbound_node in layer._inbound_nodes for n in inbound_node.parent_nodes]  # noqa: SLF001

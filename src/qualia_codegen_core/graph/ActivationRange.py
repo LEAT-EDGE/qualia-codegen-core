@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from qualia_codegen_core.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from qualia_codegen_core.graph.RoundMode import RoundMode  # noqa: TC001
+    from qualia_codegen_core.graph.RoundMode import RoundMode
 
 @dataclass
 class ActivationRange:

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
         from typing import TypeGuard
     else:
         from typing_extensions import TypeGuard
-    from qualia_codegen_core.graph.LayerNode import LayerNode  # noqa: TC001
+    from qualia_codegen_core.graph.LayerNode import LayerNode
 
 logger = logging.getLogger(__name__)
 

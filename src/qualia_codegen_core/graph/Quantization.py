@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from qualia_codegen_core.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .RoundMode import RoundMode  # noqa: TC001
+    from .RoundMode import RoundMode
 
 @dataclass
 class Quantization:
