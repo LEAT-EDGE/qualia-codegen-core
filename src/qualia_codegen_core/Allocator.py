@@ -39,8 +39,11 @@ class Allocator:
             # First layer is assumed to take input from outside model
             inlayersi = [alloc_info_list[modelgraph.nodes.index(innode)] for innode in node.innodes]
 
+
             outlayersi = [modelgraph.nodes.index(outnode) for outnode in node.outnodes]
-            keep_until = max(outlayersi)
+            if len(outlayersi) < 1:
+                logger.warning('Found intermediate node with no output node: %s', node.layer.name)
+            keep_until = max(outlayersi) if len(outlayersi) > 0 else -1
 
             alloc_info_list.append(Allocator.AllocInfo(
                 node,
