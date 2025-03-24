@@ -33,15 +33,34 @@
     } else {
       size_t i = 0; // Total count
 
+      fprintf(f, "{\n");
+      fprintf(f, "    \"name\": \"{{ node.layer.name }}\",\n");
+      fprintf(f, "    \"type\": \"{{ node.layer.__class__.__name__ }}\",\n");
+      fprintf(f, "    \"shape\": [{{ node.output_shape[0][1:] | join(', ') }}],\n");
+      fprintf(f, "    \"dtype\": \"{{ node.q.number_type.__name__ }}{{ node.q.width }}\",\n");
+      fprintf(f, "    \"scale_factor\": \"{{ node.q.output_scale_factor }}\",\n");
+      fprintf(f, "    \"data\":\n");
+
       // Loop over all dimensions of first output feature maps
       {%- for dim in node.output_shape[0][1:] %} 
       {%- filter indent(2 * loop.index0) %}
+      {% if not loop.first -%}
+      if (i_{{ loop.index0 }} != 0) { // Do not write comma before first item of array
+        fprintf(f, ",");
+        {%- if loop.last %} // Innermost array (channels) is inlined
+        fprintf(f, " ");
+        {%- else %}
+        fprintf(f, "\n");
+        {%- endif %}
+      }
+      {% endif %}
+      fprintf(f, "[");
       for (size_t i_{{ loop.index }} = 0; i_{{ loop.index }} < {{ dim }}; i_{{ loop.index }}++) {
       {%- endfilter %}
       {%- endfor %}
       {%- filter indent(2 * (node.output_shape[0][1:] | length - 1)) %}
-        if (i != 0) {
-          fprintf(f, ",");
+        if (i_{{ node.output_shape[0][1:] | length }} != 0) {
+          fprintf(f, ", ");
         }
         fprintf(f,
         {%- if node.q.number_type.__name__ == 'int' -%}
@@ -63,9 +82,11 @@
       {%- for dim in node.output_shape[0][1:] %}
       {%- filter indent(2 * loop.revindex0) %}
       }
+      fprintf(f, "]");
       {%- endfilter %}
       {%- endfor %}
       fprintf(f, "\n");
+      fprintf(f, "}");
 
       fclose(f);
     }
