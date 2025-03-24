@@ -66,7 +66,7 @@
         {%- if node.q.number_type.__name__ == 'int' -%}
           "%d",
         {%- else -%}
-          "%f",
+          "%f", (double)
         {%- endif %}
         {%- if node.layer.__class__.__name__ == 'TInputLayer' -%} // Model input is passed as model parameter
           input
