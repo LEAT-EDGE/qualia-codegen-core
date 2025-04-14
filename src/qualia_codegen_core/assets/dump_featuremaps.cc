@@ -38,7 +38,7 @@
       fprintf(f, "    \"type\": \"{{ node.layer.__class__.__name__ }}\",\n");
       fprintf(f, "    \"shape\": [{{ node.output_shape[0][1:] | join(', ') }}],\n");
       fprintf(f, "    \"dtype\": \"{{ node.q.number_type.__name__ }}{{ node.q.width }}\",\n");
-      fprintf(f, "    \"scale_factor\": \"{{ node.q.output_scale_factor }}\",\n");
+      fprintf(f, "    \"scale_factor\": {{ node.q.output_scale_factor }},\n");
       fprintf(f, "    \"data\":\n");
 
       // Loop over all dimensions of first output feature maps
