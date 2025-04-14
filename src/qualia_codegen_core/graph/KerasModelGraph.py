@@ -16,9 +16,9 @@ from keras.layers import (  # type: ignore[import-untyped] # No stubs for keras 
     Conv2D,
     Dense,
     Dropout,
+    Flatten,
     GlobalAveragePooling1D,
     GlobalAveragePooling2D,
-    Flatten,
     Layer,
     MaxPooling1D,
     MaxPooling2D,
@@ -75,9 +75,9 @@ except ImportError:
         from keras.src.engine.node import Node  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
-    import numpy.typing
     import tensorflow as tf
     from keras import Model  # type: ignore[import-untyped]
+    from numpy import typing as npt
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,7 @@ class KerasModelGraph(ModelGraph):
             return Shapes(Shape(self.__none_to_one_shape(ShapeOptional(s))) for s in shapes)
         return Shapes((Shape(self.__none_to_one_shape(ShapeOptional(shapes))),))
 
-    def __convert_dtypes(self, dtypes: numpy.typing.DTypeLike | list[numpy.typing.DTypeLike]) -> DTypes:
+    def __convert_dtypes(self, dtypes: npt.DTypeLike | list[npt.DTypeLike]) -> DTypes:
         """Convert dtype or list of dtypes to DTypes object."""
         if isinstance(dtypes, list):
             return DTypes(t for t in dtypes)

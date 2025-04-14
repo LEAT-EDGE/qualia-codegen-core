@@ -9,8 +9,8 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, Union, cast
 
 import numpy as np
-import numpy.typing
 import torch
+from numpy import typing as npt
 from torch import Tensor, fx
 from torch.fx._symbolic_trace import Tracer
 from torch.fx.node import Argument, Node
@@ -305,7 +305,7 @@ class TorchModelGraph(ModelGraph):
 
     def _generate_dummy_inputs(self, shapes: Shapes,
                                 dtypes: DTypes) -> tuple[Tensor, ...]:
-        def generate_input(shape: Shape, dtype: numpy.typing.DTypeLike) -> Tensor:
+        def generate_input(shape: Shape, dtype: npt.DTypeLike) -> Tensor:
             return torch.from_numpy(np.zeros((shape[0],
                                               *self.__shape_channels_last_to_first(Shape(shape[1:]))),
                                              dtype=dtype))
@@ -318,14 +318,14 @@ class TorchModelGraph(ModelGraph):
 
 
     def __get_tensor_output_dtypes(self, tensors: tuple[Tensor, ...]) -> Literal[False] | DTypes:
-        def get_dtypes(tensor: Tensor) -> Literal[False] | numpy.typing.DTypeLike:
+        def get_dtypes(tensor: Tensor) -> Literal[False] | npt.DTypeLike:
             x = tensor.detach().numpy()
             if isinstance(x, np.ndarray): # No typing from torch.Tensor.numpy()
-                return cast('numpy.typing.DTypeLike', x.dtype)
+                return cast('npt.DTypeLike', x.dtype)
             logger.error('Return type of tensor.detach().numpy() should be a numpy.ndarray')
             return False
 
-        def no_false_value(it: Iterable[Literal[False] | numpy.typing.DTypeLike]) -> TypeGuard[Iterable[numpy.typing.DTypeLike]]:
+        def no_false_value(it: Iterable[Literal[False] | npt.DTypeLike]) -> TypeGuard[Iterable[npt.DTypeLike]]:
             return all(t is not False for t in it)
 
         res = tuple(get_dtypes(t) for t in tensors)
