@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import logging
 import sys
+
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, cast
+
 
 import jinja2
 
@@ -16,6 +18,9 @@ from .graph import layers
 from .graph.layers.TActivationLayer import TActivation, TActivationLayer
 from .Quantizer import Quantizer
 from .Validator import Validator
+
+if sys.version_info >= (3, 10): # Python 3.10 may return MultiplexedPath
+    from importlib.readers import MultiplexedPath
 
 if TYPE_CHECKING:
     from .graph.LayerNode import LayerNode
@@ -92,13 +97,29 @@ class Converter:
 
         self.number_types = {NumberType(int, 32, 64, -(2 ** (32 - 1)), 2 ** (32 - 1) - 1)}
 
-        self._template_path: list[Path] | None = None
-        if isinstance(Converter.TEMPLATE_PATH, Path): # Already Path objected, no need for hackery
-            self._template_path = [Converter.TEMPLATE_PATH]
-        elif sys.version_info >= (3, 10): # Python 3.10 may return MultiplexedPath
-            from importlib.readers import MultiplexedPath
-            if isinstance(Converter.TEMPLATE_PATH, MultiplexedPath):
-                self._template_path = [Converter.TEMPLATE_PATH / ''] # / operator applies to underlying Path
+        self._template_path: list[Path] = []
+        self.template_path_prepend(Converter.TEMPLATE_PATH)
+
+    def template_path_prepend(self, path: Path | MultiplexedPath) -> None:
+        """Prepend a new path to template_path list.
+
+        Used in plugins to specify template path with higher priority over Qualia-CodeGen-Core.
+
+        :param path: Path to prepend
+        """
+        template_path: Path | None = None
+        if isinstance(path, Path):  # Already Path objected, no need for hackery
+            template_path = path
+        elif sys.version_info >= (3, 10) and isinstance(Converter.TEMPLATE_PATH, MultiplexedPath):
+            # Python 3.10 may return MultiplexedPath
+            template_path = path / ''  # / operator applies to underlying Path
+
+        if template_path is not None:
+            self._template_path.insert(0, template_path)
+        else:  # If we failed, also clear _template_path to fail conversion altogether instead of having incorrect search path
+            logger.error('Failed to populate template path with %s', path)
+            raise RuntimeError
+
 
     def weights2carray(self, node: LayerNode) -> dict[str, dict[str, str | tuple[int, ...]]]:
         return {name: self.dataconverter.tensor2carray(arr, f'{node.layer.name}_{name}')
