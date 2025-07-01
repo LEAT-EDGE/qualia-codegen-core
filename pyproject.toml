@@ -46,6 +46,7 @@ source = "scm"
 
 [tool.ruff]
 extend-exclude = ["third_party"]
+format.quote-style = "single"
 lint.select = ["ALL"]
 #select = ["E", "F", "B"]
 lint.ignore = [
@@ -66,7 +67,7 @@ builtins-allowed-modules = ["typing"]
 [tool.mypy]
 files = ["src"]
 exclude = ["third_party", "examples", "libqualia-neuralnetwork"]
-python_version = 3.9
+python_version = "3.9"
 strict = true
 show_column_numbers = true
 pretty = true
