@@ -109,9 +109,10 @@ class Converter:
         Used in plugins to specify template path with higher priority over Qualia-CodeGen-Core.
 
         :param path: Path to prepend
+        :raise TypeError: if ``path`` is not a `:class:pathlib.Path` object
         """
         if not isinstance(path, Path):
-            logger.error("Path '%s' must be an actual Path object pointing to a path on the filesystem", path)
+            logger.error("Path '%s' must be an actual pathlib.Path object pointing to a path on the filesystem", path)
             raise TypeError
 
         self._template_path.insert(0, path)
