@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import logging
-import sys
-
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, cast
-
 
 import jinja2
 
@@ -19,15 +16,20 @@ from .graph.layers.TActivationLayer import TActivation, TActivationLayer
 from .Quantizer import Quantizer
 from .Validator import Validator
 
-if sys.version_info >= (3, 10): # Python 3.10 may return MultiplexedPath
-    from importlib.readers import MultiplexedPath
-
 if TYPE_CHECKING:
+    import sys
+
     from .graph.LayerNode import LayerNode
     from .graph.layers.TBaseLayer import TBaseLayer
     from .graph.ModelGraph import ModelGraph
 
+    if sys.version_info >= (3, 10):
+        from importlib.resources.abc import Traversable
+    else:
+        from importlib.abc import Traversable
+
 logger = logging.getLogger(__name__)
+
 
 class NumberType(NamedTuple):
     number_type: type[int | float]
@@ -35,6 +37,7 @@ class NumberType(NamedTuple):
     long_width: int
     min_val: int
     max_val: int
+
 
 class Converter:
     layer_template_files: ClassVar[dict[type[TBaseLayer], str | None]] = {
@@ -56,7 +59,7 @@ class Converter:
 
         # Custom Qualia layers
         layers.TAddLayer: 'add',
-        layers.TSumLayer: 'sum', # Global Sum Pooling
+        layers.TSumLayer: 'sum',  # Global Sum Pooling
 
         # Custom BrainMIX layer
         layers.TConcatenateLayer: 'concatenate',
@@ -100,26 +103,18 @@ class Converter:
         self._template_path: list[Path] = []
         self.template_path_prepend(Converter.TEMPLATE_PATH)
 
-    def template_path_prepend(self, path: Path | MultiplexedPath) -> None:
+    def template_path_prepend(self, path: Traversable) -> None:
         """Prepend a new path to template_path list.
 
         Used in plugins to specify template path with higher priority over Qualia-CodeGen-Core.
 
         :param path: Path to prepend
         """
-        template_path: Path | None = None
-        if isinstance(path, Path):  # Already Path objected, no need for hackery
-            template_path = path
-        elif sys.version_info >= (3, 10) and isinstance(Converter.TEMPLATE_PATH, MultiplexedPath):
-            # Python 3.10 may return MultiplexedPath
-            template_path = path / ''  # / operator applies to underlying Path
+        if not isinstance(path, Path):
+            logger.error("Path '%s' must be an actual Path object pointing to a path on the filesystem", path)
+            raise TypeError
 
-        if template_path is not None:
-            self._template_path.insert(0, template_path)
-        else:  # If we failed, also clear _template_path to fail conversion altogether instead of having incorrect search path
-            logger.error('Failed to populate template path with %s', path)
-            raise RuntimeError
-
+        self._template_path.insert(0, path)
 
     def weights2carray(self, node: LayerNode) -> dict[str, dict[str, str | tuple[int, ...]]]:
         return {name: self.dataconverter.tensor2carray(arr, f'{node.layer.name}_{name}')
@@ -204,7 +199,7 @@ class Converter:
     def combine_relu(self, modelgraph: ModelGraph) -> ModelGraph | None:
         relunodes = [node for node in modelgraph.nodes
                         if isinstance(node.layer, layers.TActivationLayer)
-                        and node.layer.activation in [TActivation.RELU, TActivation.RELU6]]
+                        and node.layer.activation in {TActivation.RELU, TActivation.RELU6}]
         for relunode in relunodes:
             for innode in relunode.innodes:  # warning: activations_range unsupported with multiple inputs to relu
                 if not hasattr(innode.layer, 'activation'):
@@ -302,12 +297,10 @@ class Converter:
             if hasattr(node.layer, 'weights') and len(node.layer.weights) > 0:
                 rendered += self.write_layer_weights(template=template, node=node) + '\n'
 
-
         rendered += self.write_model_header(modelgraph=modelgraph) + '\n'
         rendered += self.write_model(modelgraph=modelgraph, allocation=allocation) + '\n'
 
         return rendered
-
 
     def convert_model(self, modelgraph: ModelGraph) -> str | bool:
         if self._template_path is None:

@@ -1,14 +1,20 @@
+from __future__ import annotations
+
 import sys
 from abc import ABC
 from collections import OrderedDict
 from dataclasses import dataclass
 
-from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shapes
+from qualia_codegen_core.typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from qualia_codegen_core.typing import DTypes, NDArrayFloatOrInt, Shapes
 
 if sys.version_info >= (3, 12):
     from typing import override
 else:
     from typing_extensions import override
+
 
 @dataclass(eq=False)
 class TBaseLayer(ABC):
@@ -19,6 +25,10 @@ class TBaseLayer(ABC):
 
     @override
     def __eq__(self, other: object) -> bool:
+        raise NotImplementedError
+
+    @override
+    def __hash__(self) -> int:
         raise NotImplementedError
 
     @property

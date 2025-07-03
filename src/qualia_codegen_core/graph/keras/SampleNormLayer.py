@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import sys
 
@@ -12,7 +14,7 @@ else:
 logger = logging.getLogger(__name__)
 
 class SampleNormLayer(keras.layers.Layer):  # type: ignore[misc]
-    """custom layer to normalize input data."""
+    """Custom layer to normalize input data."""
 
     def __init__(self,
                  norm: str = 'z',
@@ -20,12 +22,12 @@ class SampleNormLayer(keras.layers.Layer):  # type: ignore[misc]
                  trainable: bool = False,  # noqa: FBT001, FBT002
                  dtype: str = 'float32') -> None:
         super().__init__(name=name, trainable=trainable, dtype=dtype)
-        if norm not in ['z', 'minmax']:
+        if norm not in {'z', 'minmax'}:
             logger.error('Unsupported mode %s, supported modes: z, minmax', norm)
             raise ValueError
         self.norm = norm
 
-    @override  # type: ignore[misc]
+    @override
     def call(self, inputs: tf.Tensor) -> tf.Tensor:
         """Normalize each input sample."""
         if self.norm == 'z':

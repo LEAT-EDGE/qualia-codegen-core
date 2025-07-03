@@ -50,10 +50,11 @@ format.quote-style = "single"
 lint.select = ["ALL"]
 #select = ["E", "F", "B"]
 lint.ignore = [
-  "D1", # Ignore missing pydoc
+  "D1",   # Ignore missing pydoc
   "N999", # Our module have the same name as the contained class in PascalCase
   "D203", # Prefer D211
-  "D213" # D212 is ruff's preference
+  "D213", # D212 is ruff's preference
+  "PLC0415", # We have a lot of deferred module loading to avoid circual dependencies, hard dependencies and heavy module loading
 ]
 line-length = 131
 target-version = "py39"

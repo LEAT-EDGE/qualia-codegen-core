@@ -247,10 +247,10 @@ class TorchModelGraph(ModelGraph):
         return self
 
     def __shape_channels_last_to_first(self, shape: Shape) -> Shape:
-        return Shape((shape[-1], ) + shape[0:-1])
+        return Shape((shape[-1], *shape[0:-1]))
 
     def __shape_channels_first_to_last(self, shape: Shape) -> Shape:
-        return Shape(shape[1:] + (shape[0], ))
+        return Shape((*shape[1:], shape[0]))
 
     @classmethod
     def transpose(cls, weights: NDArrayFloatOrInt) -> NDArrayFloatOrInt:
@@ -581,6 +581,6 @@ class TorchModelGraph(ModelGraph):
                 dense = outnode.layer
                 # reshape using Flatten input shape (for example last Conv output)
                 dense.kernel = dense.kernel.reshape(
-                        (dense.units, ) + node.layer.input_shape[0][-1:] + node.layer.input_shape[0][1:-1])
+                        (dense.units, *node.layer.input_shape[0][-1:], *node.layer.input_shape[0][1:-1]))
                 dense.kernel = TorchModelGraph.transpose(dense.kernel)
                 dense.kernel = dense.kernel.reshape((dense.units, -1))
