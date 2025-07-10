@@ -145,6 +145,7 @@ static inline void {{ node.layer.name }}(
 #undef ACTIVATION_{{ node.layer.activation.name | upper }}
 #undef WEIGHTS_SCALE_FACTOR
 #undef BIASES_SCALE_FACTOR
+#undef TMP_SCALE_FACTOR
 #undef INPUT_SCALE_FACTOR
 #undef OUTPUT_SCALE_FACTOR
 #undef NUMBER_T
