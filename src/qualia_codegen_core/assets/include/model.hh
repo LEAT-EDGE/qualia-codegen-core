@@ -23,6 +23,8 @@ extern "C" {
 {%- endfor %}
 #endif
 
+#define MODEL_NAME {{ model_name }}
+
 {% for dim in nodes[0].output_shape[0][1:] %}
 #define MODEL_INPUT_DIM_{{ loop.index - 1 }} {{ dim }}
 {%- endfor %}
@@ -46,7 +48,7 @@ typedef {{ qtype2ctype(nodes[0].q.number_type, nodes[0].q.width) }} input_t{% fo
 typedef {{ nodes[-1].layer.name }}_output_type output_t;
 
 
-void cnn(
+void {{ model_name }}(
   const input_t input,
   output_t output);
 

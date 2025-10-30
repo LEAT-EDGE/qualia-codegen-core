@@ -34,7 +34,7 @@ static int sample = 0; // Track current sample
 {% endif -%}
 
 
-void cnn(
+void {{ model_name }}(
   const input_t input,
   {{ nodes[-1].layer.name }}_output_type {{ nodes[-1].layer.name }}_output) {
   

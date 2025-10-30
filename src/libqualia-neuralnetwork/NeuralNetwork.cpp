@@ -93,7 +93,7 @@ void neuralNetworkRun(const float input[], output_t output) {
 	}
 
 	// Run inference
-	cnn(inputs, output);
+	MODEL_NAME(inputs, output);
 }
 
 struct NNResult neuralNetworkInfer(const float input[]) {

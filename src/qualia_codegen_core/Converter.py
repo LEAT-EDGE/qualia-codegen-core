@@ -71,6 +71,7 @@ class Converter:
 
     def __init__(self,
                  output_path: Path | None = None,
+                 model_name: str = 'cnn',
                  dump_featuremaps: bool = False) -> None:  # noqa: FBT001, FBT002
         super().__init__()
 
@@ -95,6 +96,8 @@ class Converter:
             self.output_path_weights = Path()
 
             self.write_file = False
+
+        self.model_name = model_name
 
         self.dump_featuremaps = dump_featuremaps
 
@@ -156,14 +159,18 @@ class Converter:
         return rendered
 
     def write_model_header(self, modelgraph: ModelGraph) -> str:
-        return self.render_template('include/model.hh', self.output_path_header / 'model.h', nodes=modelgraph.nodes,
+        return self.render_template('include/model.hh', self.output_path_header / 'model.h',
+                                    nodes=modelgraph.nodes,
+                                    model_name=self.model_name,
                                     qtype2ctype=self.dataconverter.qtype2ctype)
 
     def write_model(self,
                     modelgraph: ModelGraph,
                     allocation: dict[str, list[list[LayerNode]] | dict[LayerNode, int]] | None) -> str:
-        return self.render_template('model.cc', self.output_path / 'model.c', nodes=modelgraph.nodes,
+        return self.render_template('model.cc', self.output_path / 'model.c',
+                                    nodes=modelgraph.nodes,
                                     allocation=allocation,
+                                    model_name=self.model_name,
                                     qtype2ctype=self.dataconverter.qtype2ctype,
                                     dump_featuremaps=self.dump_featuremaps,
                                     dump_featuremaps_path=self.output_path_featuremaps)
@@ -235,6 +242,11 @@ class Converter:
         # Combine ReLU with previous layer (Conv1D/Dense), activations range must be copied to previous layer
         return self.combine_relu(modelgraph_combined_zeropadding)
 
+    def prepend_modelname(self, modelgraph: ModelGraph) -> ModelGraph:
+        for node in modelgraph.nodes:
+            node.layer.name = f'{self.model_name}_{node.layer.name}'
+        return modelgraph
+
     def preprocess_modelgraph(self, modelgraph: ModelGraph) -> ModelGraph | None:
         logger.info('ModelGraph:\n%s', modelgraph)
 
@@ -249,7 +261,10 @@ class Converter:
             logger.info('Graphviz: %s', graphviz)
 
         # Rename operator layers that are not valid identifiers for C
-        return self.rename_operators(optimized_modelgraph)
+        optimized_modelgraph = self.rename_operators(optimized_modelgraph)
+
+        # Prepend model name to layers name
+        return self.prepend_modelname(optimized_modelgraph)
 
     def validate_modelgraph(self, modelgraph: ModelGraph) -> bool:
         return all(self.validator.validate_node(node) for node in modelgraph.nodes)
