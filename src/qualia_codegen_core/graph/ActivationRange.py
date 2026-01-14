@@ -7,8 +7,13 @@ from qualia_codegen_core.typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from qualia_codegen_core.graph.RoundMode import RoundMode
 
+
 @dataclass
 class ActivationRange:
+    input_bits: int | None
+    activation_bits: int | None
+    weights_bits: int | None
+    bias_bits: int | None
     input_q: int | None
     activation_q: int | None
     weights_q: int | None

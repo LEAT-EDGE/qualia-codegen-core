@@ -22,6 +22,7 @@ class ActivationsRange(dict[str, ActivationRange]):
     def load(self,
              path: Path,
              input_layer_name: str) -> ActivationsRange:
+        first_input_bits: int | None = None
         first_input_q: int | None = None
         first_input_round_mode: RoundMode | None = None
 
@@ -32,16 +33,26 @@ class ActivationsRange(dict[str, ActivationRange]):
                                              self.__int_or_none(r[2]),
                                              self.__int_or_none(r[3]),
                                              self.__int_or_none(r[4]),
-                                             self.__roundmode_or_none(r[5]),
-                                             self.__roundmode_or_none(r[6]),
-                                             self.__roundmode_or_none(r[7]))
+                                             self.__int_or_none(r[5]),
+                                             self.__int_or_none(r[6]),
+                                             self.__int_or_none(r[7]),
+                                             self.__int_or_none(r[8]),
+                                             self.__roundmode_or_none(r[9]),
+                                             self.__roundmode_or_none(r[10]),
+                                             self.__roundmode_or_none(r[11]))
+                if first_input_bits is None:
+                    first_input_bits = self.__int_or_none(r[1])
                 if first_input_q is None:
-                    first_input_q = self.__int_or_none(r[1])
+                    first_input_q = self.__int_or_none(r[5])
                 if first_input_round_mode is None:
                     first_input_round_mode = self[r[0]].input_round_mode
 
         # Model input range
-        self[input_layer_name] = ActivationRange(first_input_q,
+        self[input_layer_name] = ActivationRange(first_input_bits,
+                                                 first_input_bits,
+                                                 0,
+                                                 None,
+                                                 first_input_q,
                                                  first_input_q,
                                                  0,
                                                  None,
