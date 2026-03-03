@@ -68,7 +68,7 @@ builtins-allowed-modules = ["typing"]
 [tool.mypy]
 files = ["src"]
 exclude = ["third_party", "examples", "libqualia-neuralnetwork"]
-python_version = "3.9"
+python_version = "3.11"
 strict = true
 show_column_numbers = true
 pretty = true
