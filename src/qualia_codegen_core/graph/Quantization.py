@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from typing import Any
 
 from qualia_codegen_core.typing import TYPE_CHECKING
 
@@ -24,3 +25,6 @@ class Quantization:
 
     weights_round_mode: RoundMode | None = None
     output_round_mode: RoundMode | None = None
+
+    def asdict(self) -> dict[str, Any]:
+        return asdict(self)
