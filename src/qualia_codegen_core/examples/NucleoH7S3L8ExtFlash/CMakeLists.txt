@@ -26,26 +26,6 @@ if (NOT ${LIBQUALIA_NEURALNETWORK_RESULT} EQUAL 0)
 endif()
 message(STATUS "Found libqualia-neuralnetwork: ${LIBQUALIA_NEURALNETWORK_SOURCE_DIR}")
 
-set(CMAKE_SYSTEM_PROCESSOR arm)
-
-# which compilers to use for C and C++
-set(CMAKE_C_COMPILER arm-none-eabi-gcc)
-set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
-set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
-
-SET(CMAKE_ASM_FLAGS "-x assembler-with-cpp")
-
-# here is the target environment located
-#set(CMAKE_FIND_ROOT_PATH  )
-
-# adjust the default behaviour of the FIND_XXX() commands:
-# search headers and libraries in the target environment, search 
-# programs in the host environment
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 set(NucleoH7S3L8_CFLAGS
@@ -130,7 +110,6 @@ target_compile_definitions(${PROJECT_NAME}_Boot PUBLIC
 target_link_options(${PROJECT_NAME}_Boot PUBLIC
   ${NucleoH7S3L8_CFLAGS}
 
-  "-specs=nosys.specs"
   "-T" "${CMAKE_CURRENT_SOURCE_DIR}/Makefile/Boot/stm32h7s3xx_flash.ld"
   "-z" "separate-code"
   "-Wl,--print-memory-usage"
