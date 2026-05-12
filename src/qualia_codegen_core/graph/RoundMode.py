@@ -1,4 +1,4 @@
-""""Contains enumeration of available rounding modes."""
+"""Contains enumeration of available rounding modes."""
 
 from __future__ import annotations
 

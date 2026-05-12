@@ -1,4 +1,4 @@
-""""Contains the Quantization class to hold quantization settings in a model graph node."""
+"""Contains the Quantization class to hold quantization settings in a model graph node."""
 
 from __future__ import annotations
 
