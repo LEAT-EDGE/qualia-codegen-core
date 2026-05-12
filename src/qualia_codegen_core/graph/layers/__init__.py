@@ -1,3 +1,5 @@
+"""Qualia-CodeGen-Core graph.layer package contains layers definition for internal model graph representation."""
+
 from .TActivationLayer import TActivationLayer
 from .TAddLayer import TAddLayer
 from .TAvgPooling1DLayer import TAvgPooling1DLayer

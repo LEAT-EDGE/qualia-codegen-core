@@ -1,3 +1,5 @@
+"""Qualia-CodeGen-Core graph package contains modules to create and manage internal model graph representation."""
+
 import importlib.util
 import logging
 
