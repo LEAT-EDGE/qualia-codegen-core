@@ -6,7 +6,7 @@ import logging
 import operator
 import sys
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, TypeAlias, Union, cast
 
 import numpy as np
 import torch
@@ -74,11 +74,13 @@ if TYPE_CHECKING:
         from typing_extensions import TypeGuard
 
 IterableNode = Union[Node, Iterable['IterableNode']]
+TMappingResult: TypeAlias = Callable[[Module, TBaseLayer], tuple[type[TBaseLayer], list[Any]]]
 
 logger = logging.getLogger(__name__)
 
+
 class TorchModelGraph(ModelGraph):
-    MODULE_MAPPING: ClassVar[dict[type[Module], Callable[[Module, TBaseLayer], tuple[type[TBaseLayer], list[Any]]]]] = {
+    MODULE_MAPPING: ClassVar[dict[type[Module], TMappingResult]] = {
         # Standard torch.nn layers
         BatchNorm1d: lambda module, _: (TBatchNormalization1DLayer, [TActivation.LINEAR,
                                                                      module.running_mean.detach().numpy()
@@ -207,17 +209,14 @@ class TorchModelGraph(ModelGraph):
     def __init__(self, model: Module) -> None:
         super().__init__()
 
-
         self._model = model
         self.__layer_cache: dict[Node, TBaseLayer] = {}
         self._layer_outputs: dict[str, Tensor] = {}
         self.__modules = dict(model.named_modules())
-        self.__module_mapping: dict[type[Module], Callable[[Module, TBaseLayer], tuple[type[TBaseLayer], list[Any]]]] = {}
+        self.__module_mapping: dict[type[Module], TMappingResult] = {}
 
     def convert(self,
-                custom_layers: dict[type[Module],
-                                    Callable[[Module, TBaseLayer],
-                                             tuple[type[TBaseLayer], list[Any]]]] | None = None) -> ModelGraph | None:
+                custom_layers: dict[type[Module], TMappingResult] | None = None) -> ModelGraph | None:
         custom_layers = custom_layers if custom_layers is not None else {}
         self.__module_mapping = {**TorchModelGraph.MODULE_MAPPING, **custom_layers}
         # Put model in inference mode
