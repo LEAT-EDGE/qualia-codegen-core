@@ -58,7 +58,7 @@
 
 static inline void {{ node.layer.name }}(
   const NUMBER_T input[INPUT_HEIGHT][INPUT_WIDTH][INPUT_CHANNELS],               // IN
-  const NUMBER_T kernel[CONV_FILTERS][CONV_KERNEL_SIZE_X][CONV_KERNEL_SIZE_Y][INPUT_CHANNELS / CONV_GROUPS], // IN
+  const NUMBER_T kernel[CONV_FILTERS][CONV_KERNEL_SIZE_Y][CONV_KERNEL_SIZE_X][INPUT_CHANNELS / CONV_GROUPS], // IN
 {% if node.layer.use_bias %}
   const NUMBER_T bias[CONV_FILTERS],						                // IN
 {% endif %}
