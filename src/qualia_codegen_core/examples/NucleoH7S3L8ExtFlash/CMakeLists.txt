@@ -178,7 +178,6 @@ target_compile_definitions(${PROJECT_NAME}_ExtMemLoader PUBLIC
 target_link_options(${PROJECT_NAME}_ExtMemLoader PUBLIC
   ${NucleoH7S3L8_CFLAGS}
 
-  "-specs=nosys.specs"
   "-T" "${CMAKE_CURRENT_SOURCE_DIR}/Makefile/ExtMemLoader/stm32h7rsxx_extmemloader_stm32cube.ld"
   "-z" "separate-code"
   "-Wl,--print-memory-usage"
@@ -230,7 +229,6 @@ target_compile_definitions(${PROJECT_NAME}_Appli PUBLIC
 target_link_options(${PROJECT_NAME}_Appli PUBLIC
   ${NucleoH7S3L8_CFLAGS}
 
-  "-specs=nosys.specs"
   "-T" "${CMAKE_CURRENT_SOURCE_DIR}/Makefile/Appli/stm32h7rsxx_ROMxspi2.ld"
   "-z" "separate-code"
   "-Wl,--print-memory-usage"
