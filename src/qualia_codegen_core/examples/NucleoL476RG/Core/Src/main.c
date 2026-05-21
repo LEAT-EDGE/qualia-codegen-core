@@ -190,10 +190,18 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 1;
+#ifdef CORE_CLOCK_48MHZ
+  RCC_OscInitStruct.PLL.PLLN = 12;
+#else
   RCC_OscInitStruct.PLL.PLLN = 10;
+#endif
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+#ifdef CORE_CLOCK_48MHZ
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV4;
+#else
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+#endif
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -208,7 +216,11 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
+#ifdef CORE_CLOCK_48MHZ
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+#else
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+#endif
   {
     Error_Handler();
   }
