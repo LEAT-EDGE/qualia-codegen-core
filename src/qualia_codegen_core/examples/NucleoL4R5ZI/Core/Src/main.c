@@ -69,7 +69,7 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void RxEventCallback(UART_HandleTypeDef *huart, uint16_t Pos) {
-  if(huart->Instance == USART2) { //Determine whether it is serial port 2
+  if(huart->Instance == LPUART1) { //Determine whether it is serial port 2
     uint16_t max_read = MAX_READ_SIZE - receive_buff_cnt;
 
     //Calculate the length of the received data
