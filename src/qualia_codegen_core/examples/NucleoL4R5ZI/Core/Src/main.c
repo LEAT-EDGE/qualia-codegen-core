@@ -50,7 +50,7 @@ DMA_HandleTypeDef hdma_lpuart1_rx;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-static char receive_buff[MAX_READ_SIZE]  __attribute__((section(".RAM2bss"))) = {'\0'};                //Define the receive array
+volatile static char receive_buff[MAX_READ_SIZE] = {'\0'};                //Define the receive array
 volatile uint16_t receive_buff_cnt = 0;
 static char send_msg[32] = "READY\r\n";
 /* USER CODE END PV */
