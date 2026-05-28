@@ -29,8 +29,8 @@ message(STATUS "Found libqualia-neuralnetwork: ${LIBQUALIA_NEURALNETWORK_SOURCE_
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 set(NucleoH7A3ZIQ_CFLAGS
-  "-mcpu=cortex-m4"
-  "-mfpu=fpv4-sp-d16"
+  "-mcpu=cortex-m7"
+  "-mfpu=fpv5-d16"
   "-mfloat-abi=hard"
   "-mthumb"
 
@@ -83,7 +83,6 @@ add_executable(${PROJECT_NAME}
   Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c
   Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c
   Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c
-  Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c
   Core/Src/system_stm32h7xx.c
   startup_stm32h7a3xxq.s
 )
@@ -92,7 +91,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   Core/Inc
   Drivers/STM32H7xx_HAL_Driver/Inc
   Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
-  Drivers/BSP/STM32H7xx_Nucleo
   Drivers/CMSIS/Device/ST/STM32H7xx/Include
   Drivers/CMSIS/Include
 )

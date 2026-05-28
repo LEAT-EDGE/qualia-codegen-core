@@ -59,11 +59,16 @@ _sstack = _estack - _Min_Stack_Size;
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
+__RAM_BEGIN    = 0x24000000;
+__RAM_SIZE     = 0xFC000;
+__RAM_NONCACHEABLEBUFFER_SIZE = 0x4000;
+
 /* Specify the memory areas */
 MEMORY
 {
 DTCMRAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
-RAM (xrw)      : ORIGIN = 0x24000000, LENGTH = 1024K
+RAM (xrw)      : ORIGIN = __RAM_BEGIN, LENGTH = __RAM_SIZE
+RAM_NONCACHEABLEBUFFER (xrw) : ORIGIN = __RAM_BEGIN + __RAM_SIZE,  LENGTH = __RAM_NONCACHEABLEBUFFER_SIZE
 ITCMRAM (xrw)      : ORIGIN = 0x00000000, LENGTH = 64K
 FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 2048K
 }
@@ -165,7 +170,7 @@ SECTIONS
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-  } >DTCMRAM AT> FLASH
+  } >RAM AT> FLASH
 
 
   /* Uninitialized data section */
@@ -182,7 +187,14 @@ SECTIONS
     . = ALIGN(4);
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
-  } >DTCMRAM
+  } >RAM
+
+  RW_NONCACHEABLE :
+  {
+    __NONCACHEABLEBUFFER_BEGIN = .;/* create symbol for start of section */
+    KEEP(*(noncacheable_buffer))
+    __NONCACHEABLEBUFFER_END = .;  /* create symbol for start of section */
+  } > RAM_NONCACHEABLEBUFFER
 
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :

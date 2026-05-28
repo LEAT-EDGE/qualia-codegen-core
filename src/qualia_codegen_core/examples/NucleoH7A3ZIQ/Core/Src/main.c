@@ -44,23 +44,22 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-COM_InitTypeDef BspCOMInit;
-
-UART_HandleTypeDef hlpuart1;
-DMA_HandleTypeDef hdma_lpuart1_rx;
+UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
-static char receive_buff[MAX_READ_SIZE] = {'\0'};                //Define the receive array
+volatile __attribute__((section("noncacheable_buffer"))) static char receive_buff[MAX_READ_SIZE] = {'\0'};                //Define the receive array
 volatile uint16_t receive_buff_cnt = 0;
 static char send_msg[32] = "READY\r\n";
+volatile static int int_triggered = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_BDMA2_Init(void);
-static void MX_LPUART1_UART_Init(void);
+static void MX_DMA_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -68,7 +67,8 @@ static void MX_LPUART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void RxEventCallback(UART_HandleTypeDef *huart, uint16_t Pos) {
-  if(huart->Instance == LPUART1) { //Determine whether it is serial port 2
+  int_triggered++;
+  if(huart->Instance == USART3) { //Determine whether it is serial port 2
     uint16_t max_read = MAX_READ_SIZE - receive_buff_cnt;
 
     //Calculate the length of the received data
@@ -80,7 +80,7 @@ void RxEventCallback(UART_HandleTypeDef *huart, uint16_t Pos) {
     if (receive_buff[receive_buff_cnt - 1] != '\n') {
       max_read -= data_length;
       //Restart to start DMA transmission of MAX_READ_SIZE bytes of data at a time
-      HAL_UARTEx_ReceiveToIdle_DMA(&hlpuart1, (uint8_t*)(receive_buff + receive_buff_cnt), max_read);
+      HAL_UARTEx_ReceiveToIdle_DMA(&huart3, (uint8_t*)(receive_buff + receive_buff_cnt), max_read);
     }
   }
 }
@@ -120,6 +120,14 @@ int main(void)
   /* MPU Configuration--------------------------------------------------------*/
   MPU_Config();
 
+  /* Enable the CPU Cache */
+
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
+
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -138,49 +146,38 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_BDMA2_Init();
-  MX_LPUART1_UART_Init();
+  MX_DMA_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_UART_RegisterRxEventCallback(&huart3, RxEventCallback);
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart3, (uint8_t*)receive_buff, MAX_READ_SIZE);
+  // HAL_UARTEx_ReceiveToIdle_IT(&huart3, (uint8_t*)receive_buff, MAX_READ_SIZE);
+  HAL_UART_Transmit(&huart3, (unsigned char *)send_msg, 7, 0x200); // Send READY
   /* USER CODE END 2 */
-
-  /* Initialize leds */
-  BSP_LED_Init(LED_GREEN);
-  BSP_LED_Init(LED_YELLOW);
-  BSP_LED_Init(LED_RED);
-
-  /* Initialize USER push-button, will be used to trigger an interrupt each time it's pressed.*/
-  BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
-
-  /* Initialize COM1 port (115200, 8 bits (7-bit data + 1 stop bit), no parity */
-  BspCOMInit.BaudRate   = 115200;
-  BspCOMInit.WordLength = COM_WORDLENGTH_8B;
-  BspCOMInit.StopBits   = COM_STOPBITS_1;
-  BspCOMInit.Parity     = COM_PARITY_NONE;
-  BspCOMInit.HwFlowCtl  = COM_HWCONTROL_NONE;
-  if (BSP_COM_Init(COM1, &BspCOMInit) != BSP_ERROR_NONE)
-  {
-    Error_Handler();
-  }
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // int16_t reclen = 0;
+    // HAL_UARTEx_ReceiveToIdle(&huart3, receive_buff, 1, &reclen, 0x200);
+    // size_t len1 = snprintf(send_msg, 32, "%d\r\n", int_triggered);
+    // HAL_UART_Transmit(&huart3, (unsigned char *)send_msg, len1, 0x200);
+
     if (receive_buff_cnt > 0 && receive_buff[receive_buff_cnt - 1] == '\n') {
       float *inputs = serialBufToFloats(receive_buff, receive_buff_cnt);
       size_t len = snprintf(send_msg, 32, "%d\r\n", receive_buff_cnt);
       receive_buff_cnt = 0;
-      HAL_UARTEx_ReceiveToIdle_DMA(&hlpuart1, (uint8_t*)receive_buff, MAX_READ_SIZE);
+      HAL_UARTEx_ReceiveToIdle_DMA(&huart3, (uint8_t*)receive_buff, MAX_READ_SIZE);
 
-      HAL_UART_Transmit(&hlpuart1, (unsigned char *)send_msg, len, 0x200);
+      HAL_UART_Transmit(&huart3, (unsigned char *)send_msg, len, 0x200);
 
       uint32_t start = getCurrentMicros();
       struct NNResult res = neuralNetworkInfer(inputs);
       uint32_t stop = getCurrentMicros();
 
       len = snprintf(send_msg, 32, "%d,%d,%f,%lu\r\n", res.inference_count, res.label, (double)res.dist, stop - start);
-      HAL_UART_Transmit(&hlpuart1, (unsigned char *)send_msg, len, 0x200);
+      HAL_UART_Transmit(&huart3, (unsigned char *)send_msg, len, 0x200);
     }
 
     /* USER CODE END WHILE */
@@ -253,66 +250,66 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief LPUART1 Initialization Function
+  * @brief USART3 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_LPUART1_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
-  /* USER CODE BEGIN LPUART1_Init 0 */
+  /* USER CODE BEGIN USART3_Init 0 */
 
-  /* USER CODE END LPUART1_Init 0 */
+  /* USER CODE END USART3_Init 0 */
 
-  /* USER CODE BEGIN LPUART1_Init 1 */
+  /* USER CODE BEGIN USART3_Init 1 */
 
-  /* USER CODE END LPUART1_Init 1 */
-  hlpuart1.Instance = LPUART1;
-  hlpuart1.Init.BaudRate = 921600;
-  hlpuart1.Init.WordLength = UART_WORDLENGTH_8B;
-  hlpuart1.Init.StopBits = UART_STOPBITS_1;
-  hlpuart1.Init.Parity = UART_PARITY_NONE;
-  hlpuart1.Init.Mode = UART_MODE_TX_RX;
-  hlpuart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  hlpuart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  hlpuart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  hlpuart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  hlpuart1.FifoMode = UART_FIFOMODE_DISABLE;
-  if (HAL_UART_Init(&hlpuart1) != HAL_OK)
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 921600;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetTxFifoThreshold(&hlpuart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart3, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetRxFifoThreshold(&hlpuart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart3, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_DisableFifoMode(&hlpuart1) != HAL_OK)
+  if (HAL_UARTEx_DisableFifoMode(&huart3) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN LPUART1_Init 2 */
+  /* USER CODE BEGIN USART3_Init 2 */
 
-  /* USER CODE END LPUART1_Init 2 */
+  /* USER CODE END USART3_Init 2 */
 
 }
 
 /**
   * Enable DMA controller clock
   */
-static void MX_BDMA2_Init(void)
+static void MX_DMA_Init(void)
 {
 
   /* DMA controller clock enable */
-  __HAL_RCC_BDMA2_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* BDMA2_Channel0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(BDMA2_Channel0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(BDMA2_Channel0_IRQn);
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
 
 }
 
@@ -330,7 +327,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -354,13 +351,13 @@ void MPU_Config(void)
   */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress = 0x0;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
-  MPU_InitStruct.SubRegionDisable = 0x87;
+  MPU_InitStruct.BaseAddress = 0x2404C000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_16KB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
   MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
   MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 
