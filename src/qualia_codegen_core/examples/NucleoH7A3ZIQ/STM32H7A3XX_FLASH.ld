@@ -60,8 +60,8 @@ _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
 __RAM_BEGIN    = 0x24000000;
-__RAM_SIZE     = 0xFC000;
-__RAM_NONCACHEABLEBUFFER_SIZE = 0x4000;
+__RAM_SIZE     = 0xF8000;
+__RAM_NONCACHEABLEBUFFER_SIZE = 0x8000;
 
 /* Specify the memory areas */
 MEMORY

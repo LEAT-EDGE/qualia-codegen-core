@@ -33,12 +33,11 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-__FLASH_BEGIN  = 0x24050000;
-__FLASH_SIZE   = 0x00022000;
+__FLASH_SIZE   = 0x0001E000;
 
 __RAM_BEGIN    = 0x24000000;
-__RAM_SIZE     = 0x4C000;
-__RAM_NONCACHEABLEBUFFER_SIZE = 0x4000;
+__RAM_SIZE     = 0x50000;
+__RAM_NONCACHEABLEBUFFER_SIZE = 0x8000;
 
 /* Highest address of the user mode stack */
 _estack = ORIGIN(DTCM) + LENGTH(DTCM); /* end of "DTCM" Ram type memory */
@@ -57,7 +56,7 @@ MEMORY
   SRAMAHB(rw)                  : ORIGIN = 0x30000000,   LENGTH = 32
   BKPSRAM(rw)                  : ORIGIN = 0x38800000,   LENGTH = 4K
 
-  FLASH(xrw)                   : ORIGIN = __FLASH_BEGIN,LENGTH = __FLASH_SIZE
+  FLASH(xrw)                   : ORIGIN = __RAM_BEGIN + __RAM_SIZE + __RAM_NONCACHEABLEBUFFER_SIZE, LENGTH = __FLASH_SIZE
 }
 
 /* Sections */

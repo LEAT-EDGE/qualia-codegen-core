@@ -34,7 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAX_READ_SIZE 16384 // Absolute max is 65535 due to HAL_UART_Receive_DMA size being uint16_t
+#define MAX_READ_SIZE 32768 // Absolute max is 65535 due to HAL_UART_Receive_DMA size being uint16_t
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -351,8 +351,8 @@ void MPU_Config(void)
   */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress = 0x2404C000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_16KB;
+  MPU_InitStruct.BaseAddress = 0x240F8000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_32KB;
   MPU_InitStruct.SubRegionDisable = 0x0;
   MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
